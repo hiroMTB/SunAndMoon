@@ -148,7 +148,6 @@ ParticleTrajectory/bin/data/render
 table.json
 *.txt
 
-Raytracer_oF_shader/bin/data/img/**/*.png
 *.class
-CosmicWeb/bin/data/**/*csv
-PdfExtractor/eclipse-workspace/PrintTextLocations/csv
+*.d
+obj
