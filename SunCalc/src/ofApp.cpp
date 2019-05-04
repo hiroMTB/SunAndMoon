@@ -71,7 +71,7 @@ void ofApp::setup(){
 
     // ray
     vec3 sunRayDirection = glm::vec3(0,1,0);
-    vec3 rayOrigin = glm::vec3(0, -height/2+165, 0);
+    vec3 rayOrigin = glm::vec3(0, 0, 0);
     sunRay.setup(rayOrigin, sunRayDirection);
     moonRay.setup(rayOrigin, sunRayDirection);
     
