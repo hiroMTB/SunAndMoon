@@ -1,0 +1,26 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path" : "${workspaceRoot}/../../../../addons/ofxAssimpModelLoader"
+		},
+		{
+			"path" : "${workspaceRoot}/../../../../addons/ofxGui"
+		},
+		{
+			"path" : "${workspaceRoot}/../../../../addons/ofxPoco"
+		},
+		{
+			"path" : "${workspaceRoot}/../../../../addons/ofxRaycaster"
+		},
+		{
+			"path" : "${workspaceRoot}/../../../../addons/ofxSunCalc"
+		},
+		{
+			"path": "${workspaceRoot}/../../../../libs/openFrameworks"
+		}
+	],
+	"settings": {}
+}
