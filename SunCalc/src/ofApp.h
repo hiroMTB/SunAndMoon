@@ -13,6 +13,8 @@ public:
     void setup();
     void update();
     void draw();
+    void draw3dDisplay();
+    void drawHeightDisplay();
     void drawBar();
     void drawText();
     void drawBG();
@@ -24,17 +26,16 @@ public:
     SunCalcDayInfo todayInfo;
     SunCalcPosition sunpos;
     MoonCalcPosition moonpos;
-    
-    string min_info_str;
-    string max_info_str;
-    string pos_str;
-    string date_str;
-    string latlon_str;
+    vec3 sunPosVec;
+    vec3 moonPosVec;
     
     ofFbo timeline;
-    string label;
     
     bool bStart = false;
+    bool bDrawRoom = false;
+    bool bDrawSphere = true;
+    bool bDrawEarth = true;
+
     float lat;
     float lon;
     float sun_brightness;
@@ -53,7 +54,5 @@ public:
     ofVboMesh moonPath;
     ofVboMesh moonWallPath;
     
-    bool bRoomView = false;
-
     ofxAssimpModelLoader model;
 };

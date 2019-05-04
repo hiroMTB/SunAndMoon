@@ -11,7 +11,8 @@ void ofApp::setup(){
     ofSetWindowShape(1920, 1080);
     ofSetSphereResolution(12);
     ofSetCircleResolution(128);
-    
+    ofSetIcoSphereResolution(5);
+
     ofSetFrameRate(60);
     ofSetVerticalSync(false);
     
@@ -22,14 +23,14 @@ void ofApp::setup(){
     lat = 52.52;
     lon = 13.40;
     
-    latlon_str = "lat:" + ofToString(lat) + ", lon:" + ofToString(lon);
+    cam.setNearClip(100);
+    cam.setFarClip(numeric_limits<float>::max()*0.001);
+
     
     update();
     
     small_font.load(OF_TTF_MONO, 8, false);
     
-    label = ofxSunCalc::dateToDateString(date);
-        
     // create/draw a timeline for each date
     timeline.allocate(ofGetWidth() - 20 - 110, 32);
     ofxSunCalc::drawSimpleDayInfoTimeline(timeline, todayInfo);
@@ -73,18 +74,13 @@ void ofApp::update(){
         date += speed;
     }
     
-    date_str = Poco::DateTimeFormatter::format(date, "%Y-%m-%d %H:%M:%S");
     sunpos = sun_calc.getSunPosition(date, lat, lon);
-    pos_str = "altitude=" + ofToString(sunpos.altitude * RAD_TO_DEG, 2) + ", azimuth=" + ofToString(sunpos.azimuth * RAD_TO_DEG,2);
     todayInfo = sun_calc.getDayInfo(date, lat, lon, false);
-    min_info_str = sun_calc.infoToString(todayInfo, true);
-    max_info_str = sun_calc.infoToString(todayInfo, false);
     
     moonpos = sun_calc.getMoonPosition(date, lat, lon);
 }
 
 void ofApp::draw(){
-
     ofEnableDepthTest();
     ofEnableAntiAliasing();
     ofEnableAlphaBlending();
@@ -92,20 +88,38 @@ void ofApp::draw(){
     
     //drawBG();
     ofBackground(0,0,40);
+    draw3dDisplay();
     
-    float rad = 800;
+    ofDisableDepthTest();
+    drawText();
+    drawBar();
+    drawHeightDisplay();
     
-    vec3 up(0, 1, 0);
-    vec3 north(0, 0, 1);
-    vec3 east(-1, 0, 0);
-    vec3 south(0, 0, -1);
-    vec3 west( 1, 0, 0);
+}
 
+void ofApp::draw3dDisplay(){
+
+    float rad = 10000;
+    static const vec3 up(0, 1, 0);
+    static const vec3 north(0, 0, 1);
+    static const vec3 east(-1, 0, 0);
+    static const vec3 south(0, 0, -1);
+    static const vec3 west( 1, 0, 0);
 
     {
         cam.begin();
         
-        if(!bRoomView){
+        if(bDrawEarth){
+            //ofSetSphereResolution(128);
+            float earthRadius = 6378136.6 * 100;  // cm
+            float floorY = floor.getPosition().y;
+            ofNoFill();
+            ofSetColor(100, 100);
+            ofDrawIcoSphere(0, -earthRadius+floorY, earthRadius);
+            //ofSetSphereResolution(12);
+        }
+        
+        if(bDrawSphere){
             ofDrawAxis(10);
 
             ofSetColor(255);
@@ -128,8 +142,9 @@ void ofApp::draw(){
             vec3 rotAxis = glm::rotate(east, az, -up);
             vec3 sunPos2 = glm::rotate(sunPos1, alt, rotAxis);  // this is the position
             vec3 sunPos3 = vec3(sunPos2.x, 0, sunPos2.z);       // this is projected position (z=0 plane)
+            sunPosVec = sunPos2;
             
-            if(!bRoomView){
+            if(bDrawSphere){
                 ofSetColor(200);
                 ofDrawLine(origin, sunPos1*rad+origin);
                 ofDrawLine(sunPos2*rad+origin, sunPos3*rad+origin);
@@ -147,35 +162,34 @@ void ofApp::draw(){
             if(bHit){
                 auto intersection = sunRay.getOrigin() + sunRay.getDirection() * baricentricCoordinates.z;
 
-                ofSetColor(255, 0, 0);
-                ofDrawSphere(intersection, 3);
-
-                // reflected light
-                auto reflLight = glm::reflect(sunRay.getDirection(),surfaceNormal);
-                ofSetColor(50, 100);
-                ofDrawLine(intersection, intersection + 20 * reflLight);
-                
-                // vbo
-                sunWallPath.addVertex(intersection);
+                if(bDrawRoom){
+                    ofSetColor(255, 0, 0);
+                    ofDrawSphere(intersection, 3);
+                    // vbo
+                    sunWallPath.addVertex(intersection);
+                }
             }
 
             // vbo
             sunPath.addVertex(sunPos2*rad + origin);
 
             ofSetColor(250, 0, 0);
-            if(!bRoomView){
+            if(bDrawSphere){
                 sunPath.drawVertices();
             }
-            sunWallPath.drawVertices();
+            
+            if(bDrawRoom){
+                sunWallPath.drawVertices();
+            }
             
             // sun
-            if(!bRoomView){
+            if(bDrawSphere){
                 ofFill();
                 ofDrawSphere(sunPos2*rad + origin, 3);
             }
             
             // circle
-            if(!bRoomView){
+            if(bDrawSphere){
                 ofSetColor(150);
                 ofPushMatrix();
                 ofTranslate(origin);
@@ -197,8 +211,9 @@ void ofApp::draw(){
             vec3 rotAxis = glm::rotate(east, az, -up);
             vec3 moonPos2 = glm::rotate(moonPos1, alt, rotAxis);  // this is the position
             vec3 moonPos3 = vec3(moonPos2.x, 0, moonPos2.z);       // this is projected position (z=0 plane)
+            moonPosVec = moonPos2;
             
-            if(!bRoomView){
+            if(bDrawSphere){
                 ofSetColor(200);
                 ofDrawLine(origin, moonPos1*rad+origin);
                 ofDrawLine(moonPos2*rad+origin, moonPos3*rad+origin);
@@ -216,16 +231,12 @@ void ofApp::draw(){
             if(bHit){
                 auto intersection = moonRay.getOrigin() + moonRay.getDirection() * baricentricCoordinates.z;
                 
-                ofSetColor(250, 250, 0);
-                ofDrawSphere(intersection, 3);
-                
-                // reflected light
-                auto reflLight = glm::reflect(moonRay.getDirection(),surfaceNormal);
-                ofSetColor(50, 100);
-                ofDrawLine(intersection, intersection + 20 * reflLight);
-                
-                // vbo
-                moonWallPath.addVertex(intersection);
+                if(bDrawRoom){
+                    ofSetColor(250, 250, 0);
+                    ofDrawSphere(intersection, 3);
+                    // vbo
+                    moonWallPath.addVertex(intersection);
+                }
             }
             
             // vbo
@@ -233,20 +244,22 @@ void ofApp::draw(){
 
             ofSetColor(250, 250, 0);
 
-            if(!bRoomView){
+            if(bDrawSphere){
                 moonPath.drawVertices();
             }
-            
-            moonWallPath.drawVertices();
+
+            if(bDrawRoom){
+                moonWallPath.drawVertices();
+            }
             
             // moon
-            if(!bRoomView){
+            if(bDrawSphere){
                 ofFill();
                 ofDrawSphere(moonPos2*rad+origin, 3);
             }
             
             // circle
-            if(!bRoomView){
+            if(bDrawSphere){
                 ofSetColor(150);
                 ofPushMatrix();
                 ofTranslate(origin);
@@ -257,34 +270,107 @@ void ofApp::draw(){
             }
         }
         
-        // room
-        ofSetColor(150);
-        box.drawWireframe();
+        if(bDrawRoom){
+            // room
+            ofSetColor(150);
+            box.drawWireframe();
+            
+            // floor
+            floor.drawWireframe();
+        }
         
-        // floor
-        floor.drawWireframe();
-
         // person
+        ofSetColor(150);
         model.drawWireframe();
     
         cam.end();
     }
-    
-    ofDisableDepthTest();
-    drawText();
-    drawBar();
-    
-    ofDrawBitmapStringHighlight("fps : " + ofToString(ofGetFrameRate()), 50, 50);
 }
 
-void ofApp::drawText(){
+
+void ofApp::drawHeightDisplay(){
     
-    ofDrawBitmapStringHighlight(date_str, 15, 20, ofColor::paleGoldenRod, ofColor::black);
-    ofDrawBitmapStringHighlight(min_info_str, 15, 45, ofColor::salmon, ofColor::white);
-    ofDrawBitmapStringHighlight(max_info_str, 15, 125, ofColor::darkorange, ofColor::white);
-    ofDrawBitmapStringHighlight(latlon_str, 195, 20, ofColor::gold, ofColor::black);
-    ofDrawBitmapStringHighlight(pos_str, 195, 45, ofColor::cornsilk, ofColor::black);
-    ofDrawBitmapStringHighlight("Current Brightness " + ofToString(sun_brightness, 3), 195, 70, ofColor::goldenRod, ofColor::white);
+    // setup 2D viewport on the right
+    float w = 150;
+    float h = ofGetHeight()-20-50;
+    float x = ofGetWidth()-w-15;
+    float y = 10;
+    ofRectangle v(x, y, w, h);
+    ofPushView();
+    ofViewport();
+    ofSetupScreenOrtho();
+    
+    {
+        // draw viewport edge and fill
+        ofNoFill();
+        ofSetLineWidth(1);
+        ofSetColor(200);
+        ofDrawRectangle(v);
+
+        ofFill();
+        ofSetColor(0);
+        ofDrawRectangle(v);
+    }
+    
+    {
+        ofPushMatrix();
+        ofTranslate(x, y);  // move to left top of 2D viewport
+    
+        float sunH = sunPosVec.y;   // normalized value
+        float moonH = moonPosVec.y; // normalized value
+
+        float yPad = 10;
+    
+        {
+            // sun height line
+            ofPushMatrix();
+            ofTranslate(w/3, h/2);
+            ofSetColor(255, 0, 0);
+            ofDrawLine(0, +h/2, 0, -h/2);
+            ofDrawCircle(0, -sunH*h/2, 3);
+            ofPopMatrix();
+        }
+    
+        {
+            // moon height line
+            ofPushMatrix();
+            ofTranslate(2*w/3, h/2);
+            ofSetColor(255, 250, 0);
+            ofDrawLine(0, +h/2, 0, -h/2);
+            ofDrawCircle(0, -moonH*h/2, 3);
+            ofPopMatrix();
+        }
+    
+        {
+            // white zero line
+            ofPushMatrix();
+            ofTranslate(w/2, h/2);  // move to center
+            ofSetColor(255);
+            ofDrawLine(-w/2, 0, w/2, 0);
+            ofPopMatrix();
+        }
+    
+        ofPopMatrix();
+    }
+    
+    ofPopView();
+}
+
+
+void ofApp::drawText(){
+
+    string latlon_str = "lat:" + ofToString(lat) + ", lon:" + ofToString(lon);
+    string pos_str = "altitude=" + ofToString(sunpos.altitude * RAD_TO_DEG, 2) + ", azimuth=" + ofToString(sunpos.azimuth * RAD_TO_DEG,2);
+    string min_info_str = sun_calc.infoToString(todayInfo, true);
+    //string max_info_str = sun_calc.infoToString(todayInfo, false);
+
+    int x = 10;
+    ofDrawBitmapStringHighlight("fps : " + ofToString(ofGetFrameRate()), x, 20);
+    ofDrawBitmapStringHighlight(latlon_str, x, 45, ofColor::gold, ofColor::black);
+    ofDrawBitmapStringHighlight(pos_str, x, 70, ofColor::cornsilk, ofColor::black);
+    ofDrawBitmapStringHighlight("Current Brightness " + ofToString(sun_brightness, 3), x, 95, ofColor::goldenRod, ofColor::white);
+    ofDrawBitmapStringHighlight(min_info_str, x, 120, ofColor::salmon, ofColor::white);
+    //ofDrawBitmapStringHighlight(max_info_str, 15, 175, ofColor::darkorange, ofColor::white);
 }
 
 void ofApp::drawBG(){
@@ -317,7 +403,8 @@ void ofApp::drawBar(){
 
     ofSetColor(255);
     timeline.draw(tx, ty);
-    ofDrawBitmapStringHighlight(label, 10, ty+13);
+    string date_str = Poco::DateTimeFormatter::format(date, "%Y-%m-%d\n%H:%M:%S");
+    ofDrawBitmapStringHighlight(date_str, 10, ty+13);
     ofNoFill();
     ofSetLineWidth(1.0);
     ofSetColor(255);
@@ -354,12 +441,10 @@ void ofApp::keyPressed(int key){
         case OF_KEY_RIGHT:
             date += Poco::Timespan(1,0,0,0,0);
             break;
-
     
         case OF_KEY_LEFT:
             date -= Poco::Timespan(1,0,0,0,0);
             break;
-
             
         case OF_KEY_UP:
             date += Poco::Timespan(30,0,0,0,0);
@@ -374,8 +459,15 @@ void ofApp::keyPressed(int key){
             break;
 
         case 'r':
-            bRoomView = !bRoomView;
+            bDrawRoom = !bDrawRoom;
             break;
 
+        case 's':
+            bDrawSphere = !bDrawSphere;
+            break;
+            
+        case 'e':
+            bDrawEarth = !bDrawEarth;
+            break;
     }
 }
