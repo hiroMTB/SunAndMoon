@@ -5,8 +5,10 @@
 #include "ofxAssimpModelLoader.h"
 #include "ofxSunCalc.h"
 #include "ofxRaycaster.h"
+#include "Room.h"
 
 using namespace glm;
+using namespace sunandmoon;
 
 class ofApp : public ofBaseApp{
     
@@ -19,22 +21,25 @@ public:
     void drawHeightDisplay();
     void drawBar();
     void drawBG();
-    void changeDate(const Poco::Timespan & span);
     void clearVbo();
     void keyPressed(int key);
 
     // app    
     ofParameter<bool> bStart{"start", false};
     ofParameter<int> fps{"fps", 0, 0, 300};
-    ofParameter<bool> bDrawRoom{"draw room", false};
     ofParameter<bool> bDrawSphere{"draw sphere", false};
     ofParameter<bool> bDrawEarth{"draw earth", true};
-    ofParameterGroup appGrp{"app", bStart, bDrawRoom, bDrawSphere, bDrawEarth};
+    ofParameterGroup appGrp{"app", bStart, fps, bDrawSphere, bDrawEarth};
 
-    // geo
-    ofParameter<float> lat{"latitude", 0, -68, 68};
-    ofParameter<float> lon{"longtitude", 0, -180, 180};
+    // geo (default Berlin)
+    ofParameter<float> lat{"latitude", 52.52, -68, 68};
+    ofParameter<float> lon{"longtitude", 13.40, -180, 180};
     ofParameterGroup geoGrp{"geo", lat, lon};
+
+    // time
+    ofParameter<string> dateSt{"date", "n.a."};
+    ofParameter<string> timeSt{"time", "n.a."};
+    ofParameterGroup timeGrp{"time", dateSt, timeSt};
 
     // sun
     ofParameter<float> sun_brightness{"sun brightness", 0, 0, 100};
@@ -56,29 +61,22 @@ public:
 
     ofxPanel gui;
 
-    ofFbo timeline;
-        
+    ofFbo timeline;        
     ofEasyCam cam;
-    ofBoxPrimitive box;
-    ofPlanePrimitive floor;
-    
+
     ofVboMesh sunPath;
-    ofVboMesh sunWallPath;
     ofVboMesh moonPath;
-    ofVboMesh moonWallPath;
-    
+
     // ofx
     Poco::LocalDateTime date;
-
     ofxAssimpModelLoader earthObj;
-    ofxAssimpModelLoader humanObj;
     
     ofxraycaster::Ray sunRay;
     ofxraycaster::Ray moonRay;
-
     ofxSunCalc sun_calc;
     SunCalcDayInfo todayInfo;
     SunCalcPosition sunpos;
     MoonCalcPosition moonpos;
 
+    Room room;
 };
