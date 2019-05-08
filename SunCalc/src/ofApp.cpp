@@ -37,7 +37,8 @@ void ofApp::setup(){
 
     update();
     
-    timeline.allocate(ofGetWidth() - 20 - 170, 32);
+    int w = ofGetScreenWidth();
+    timeline.allocate(w-20-100, 32);
 
     // 3D earth
     earthObj.loadModel("obj/earth.obj");
