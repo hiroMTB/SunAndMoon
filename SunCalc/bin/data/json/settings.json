@@ -1,0 +1,36 @@
+{
+    "settings": {
+        "Room": {
+            "depth__cm_": "900",
+            "draw_room": "0",
+            "height__cm_": "350",
+            "orientation": "0, 0, 0",
+            "width__cm_": "750"
+        },
+        "app": {
+            "draw_earth": "1",
+            "draw_sphere": "0",
+            "fps": "60",
+            "start": "0"
+        },
+        "geo": {
+            "latitude": "52.52",
+            "longtitude": "13.4"
+        },
+        "moon": {
+            "moon_brightness": "0"
+        },
+        "sun": {
+            "dawn": "04:45:00",
+            "dusk": "21:23:30",
+            "solar_noon": "13:04:15",
+            "sun_brightness": "0",
+            "sunrise": "05:25:49",
+            "sunset": "20:42:41"
+        },
+        "time": {
+            "date": "2019-05-08",
+            "time": "03:15:37"
+        }
+    }
+}
