@@ -104,20 +104,57 @@ void ofApp::draw3dDisplay(){
         cam.begin();
         
         if(bDrawEarth){
-            float earthRadius = 6378136.6 * 100;  // cm
+            float earthRadius = 10000; //6378136.6 * 100;  // cm
             float floorY = room.floor.getPosition().y;
-            ofNoFill();
-            ofSetColor(70);
+            float oceanScale = 0.984;
+            float landScale  = 0.98;
+            
             ofPushMatrix();
             ofTranslate(0, -earthRadius+floorY);
-            ofScale(earthRadius/500);
-            ofDrawIcoSphere(0, 0, 500);
+            
+            // Where we are
+            if(!room.bDrawRoom){
+                ofPushMatrix();
+                ofSetColor(255, 0, 150);
+                ofDrawLine(0,earthRadius*landScale, 0, earthRadius*1.025);
+                ofFill();
+                ofDrawSphere(vec3(0,earthRadius*1.025,0), 20);
+                ofPopMatrix();
+            }
 
+            // ocean
+            ofSetColor(0, 0, 50);
+            ofFill();
+            ofDrawIcoSphere(0, 0, earthRadius*oceanScale);
+
+            ofRotateZDeg(90-lat);
+            ofRotateYDeg(-(lon+6.17));  // 6.17 is the error of obj file
+            
+            
+            // The earth
+            ofPushMatrix();
+            ofScale(earthRadius*landScale);
+            ofScale(1.0/500);
             ofSetColor(120);
             earthObj.drawWireframe();
-            ofDrawAxis(500);
+            ofPopMatrix();
+
+            // Red line
+            ofPushMatrix();
+            ofRotateXDeg(90);
+            ofSetColor(255, 0, 0 );
+            ofNoFill();
+            ofDrawCircle(0, 0, earthRadius*1.1);
+            ofPopMatrix();
+            
+            // Pole
+            ofSetColor(0, 0, 255);
+            ofDrawLine(0, -earthRadius*1.2, 0, earthRadius*1.2);
             ofPopMatrix();
         }
+        
+        // important, look at south
+        ofRotateYDeg(-90);
         
         if(bDrawSphere){
             ofDrawAxis(10);
@@ -250,8 +287,8 @@ void ofApp::draw3dDisplay(){
 void ofApp::drawHeightDisplay(){
     
     // setup 2D viewport on the right
-    float w = 150;
-    float h = ofGetHeight()-30;
+    float w = 60;
+    float h = ofGetHeight()-80;
     float x = ofGetWidth()-w-15;
     float y = 10;
     ofRectangle v(x, y, w, h);
@@ -316,6 +353,9 @@ void ofApp::drawHeightDisplay(){
 void ofApp::updateGui(){
 
     fps = ofGetFrameRate();
+    dateSt = Poco::DateTimeFormatter::format(date, "%Y-%m-%d");
+    timeSt = Poco::DateTimeFormatter::format(date, "%H:%M:%S");
+
     sun_altitude = sunpos.altitude * RAD_TO_DEG;
     sun_azimuth  = sunpos.azimuth * RAD_TO_DEG;
     sun_dawn = sun_calc.dateToTimeString(todayInfo.dawn);
@@ -323,6 +363,7 @@ void ofApp::updateGui(){
     sun_noon = sun_calc.dateToTimeString(todayInfo.transit);
     sun_set = sun_calc.dateToTimeString(todayInfo.sunset.end);
     sun_dusk = sun_calc.dateToTimeString(todayInfo.dusk);
+    
 }
 
 void ofApp::drawBG(){
@@ -350,14 +391,11 @@ void ofApp::drawBG(){
 
 void ofApp::drawBar(){
     
-    float tx = 10;
-    float ty = ofGetHeight() - 50;;
+    float tx = 20;
+    float ty = ofGetHeight() - 50;
 
     ofSetColor(255);
     timeline.draw(tx, ty);
-
-    dateSt = Poco::DateTimeFormatter::format(date, "%Y-%m-%d");
-    timeSt = Poco::DateTimeFormatter::format(date, "%H:%M:%S");
     
     // Draw a current time mark
     float pixels_per_min = (timeline.getWidth() / 24) / 60.0;
