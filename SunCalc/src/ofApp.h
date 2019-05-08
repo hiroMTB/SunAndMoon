@@ -32,7 +32,7 @@ public:
     ofParameterGroup appGrp{"app", bStart, fps, bDrawSphere, bDrawEarth};
 
     // geo (default Berlin)
-    ofParameter<float> lat{"latitude", 52.52, -68, 68};
+    ofParameter<float> lat{"latitude", 52.52, -60, 60};
     ofParameter<float> lon{"longtitude", 13.40, -180, 180};
     ofParameterGroup geoGrp{"geo", lat, lon};
 
