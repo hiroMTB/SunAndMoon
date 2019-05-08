@@ -6,8 +6,12 @@
 #include "ofxSunCalc.h"
 #include "ofxRaycaster.h"
 #include "Room.h"
+#include "City.h"
+
+#include "AppParam.h"
 
 using namespace glm;
+using namespace module;
 using namespace sunandmoon;
 
 class ofApp : public ofBaseApp{
@@ -20,16 +24,19 @@ public:
     void draw3dDisplay();
     void drawHeightDisplay();
     void drawBar();
-    void drawBG();
+    void drawSky();
     void clearVbo();
     void keyPressed(int key);
 
-    // app    
-    ofParameter<bool> bStart{"start", false};
-    ofParameter<int> fps{"fps", 0, 0, 300};
+    // app param
+    AppParam appPrm;
+    
+    // app
+    ofParameter<bool> bDrawSky{"draw sky", false};
+    ofParameter<bool> bDrawCity{"draw city", false};
     ofParameter<bool> bDrawSphere{"draw sphere", false};
     ofParameter<bool> bDrawEarth{"draw earth", true};
-    ofParameterGroup appGrp{"app", bStart, fps, bDrawSphere, bDrawEarth};
+    ofParameterGroup appGrp{"app", bDrawSky, bDrawCity, bDrawSphere, bDrawEarth};
 
     // geo (default Berlin)
     ofParameter<float> lat{"latitude", 52.52, -60, 60};
@@ -39,7 +46,8 @@ public:
     // time
     ofParameter<string> dateSt{"date", "n.a."};
     ofParameter<string> timeSt{"time", "n.a."};
-    ofParameterGroup timeGrp{"time", dateSt, timeSt};
+    ofParameter<int> updateSpeed{"update speed (min)", 1, 0, 60*24*30};
+    ofParameterGroup timeGrp{"time", dateSt, timeSt, updateSpeed};
 
     // sun
     ofParameter<float> sun_brightness{"sun brightness", 0, 0, 100};
@@ -79,4 +87,6 @@ public:
     MoonCalcPosition moonpos;
 
     Room room;
+
+    CityData cityData;
 };

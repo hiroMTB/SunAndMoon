@@ -1,5 +1,14 @@
 {
     "settings": {
+        "App_Settings": {
+            "Alpha_Blending": "1",
+            "Anti_Aliasing": "1",
+            "Background_Color": "0, 0, 0, 255",
+            "Debug": "1",
+            "Depth_Test": "1",
+            "Target_FPS": "500",
+            "Vertical_Sync": "0"
+        },
         "Room": {
             "depth__cm_": "900",
             "draw_room": "0",
@@ -21,16 +30,17 @@
             "moon_brightness": "0"
         },
         "sun": {
-            "dawn": "04:45:00",
-            "dusk": "21:23:30",
-            "solar_noon": "13:04:15",
-            "sun_brightness": "0",
-            "sunrise": "05:25:49",
-            "sunset": "20:42:41"
+            "dawn": "04:05:05",
+            "dusk": "22:05:53",
+            "solar_noon": "13:05:29",
+            "sun_brightness": "1",
+            "sunrise": "04:52:19",
+            "sunset": "21:18:39"
         },
         "time": {
-            "date": "2019-05-08",
-            "time": "03:15:37"
+            "date": "2019-06-01",
+            "time": "06:23:02",
+            "update_speed__min_": "1"
         }
     }
 }

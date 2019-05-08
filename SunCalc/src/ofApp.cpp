@@ -18,6 +18,7 @@ void ofApp::setup(){
     
     // gui
     gui.setup("settings", "json/settings.json");
+    gui.add(appPrm.grp);
     gui.add(appGrp);
     gui.add(timeGrp);
     gui.add(geoGrp);
@@ -56,8 +57,8 @@ void ofApp::setup(){
 
 void ofApp::update(){
     
-    if(bStart) {
-        Poco::Timespan speed(0, 0, 2, 0, 0);
+    if(appPrm.bStart) {
+        Poco::Timespan speed(0, 0, updateSpeed, 0, 0);
         date += speed;
     }
     
@@ -72,13 +73,12 @@ void ofApp::update(){
 }
 
 void ofApp::draw(){
-    ofEnableDepthTest();
-    ofEnableAntiAliasing();
-    ofEnableAlphaBlending();
+    appPrm.set();
     ofSetLineWidth(1);
     
-    drawBG();
-    //ofBackground(0,0,50);
+    bDrawSky ? drawSky()
+              : ofBackground(0,0,50);
+    
     draw3dDisplay();
     
     ofDisableDepthTest();
@@ -105,20 +105,20 @@ void ofApp::draw3dDisplay(){
         
         if(bDrawEarth){
             float earthRadius = 10000; //6378136.6 * 100;  // cm
-            float floorY = room.floor.getPosition().y;
+            float floorY = room.height.get()/2;
             float oceanScale = 0.984;
             float landScale  = 0.98;
             
             ofPushMatrix();
-            ofTranslate(0, -earthRadius+floorY);
+            ofTranslate(0, -earthRadius-floorY);
             
-            // Where we are
+            // Pin, Where we are
             if(!room.bDrawRoom){
                 ofPushMatrix();
                 ofSetColor(255, 0, 150);
-                ofDrawLine(0,earthRadius*landScale, 0, earthRadius*1.025);
+                ofDrawLine(0,earthRadius+200, 0, earthRadius+400);
                 ofFill();
-                ofDrawSphere(vec3(0,earthRadius*1.025,0), 20);
+                ofDrawSphere(vec3(0,earthRadius+400,0), 15);
                 ofPopMatrix();
             }
 
@@ -128,8 +128,23 @@ void ofApp::draw3dDisplay(){
             ofDrawIcoSphere(0, 0, earthRadius*oceanScale);
 
             ofRotateZDeg(90-lat);
-            ofRotateYDeg(-(lon+6.17));  // 6.17 is the error of obj file
+            ofRotateYDeg(-lon);
             
+            
+            // City
+            if(bDrawCity){
+                for(auto & c : cityData.data){
+                    ofPushMatrix();
+                    ofRotateYDeg((180+c.lng));
+                    ofRotateZDeg(90-c.lat);
+                    ofTranslate(0, earthRadius+100);
+                    ofFill();
+                    ofSetColor(255);
+                    ofDrawSphere(0, 0, 5);
+                    //ofDrawBitmapString(c.name, 0, 0); // heavy
+                    ofPopMatrix();
+                }
+            }
             
             // The earth
             ofPushMatrix();
@@ -144,7 +159,7 @@ void ofApp::draw3dDisplay(){
             ofRotateXDeg(90);
             ofSetColor(255, 0, 0 );
             ofNoFill();
-            ofDrawCircle(0, 0, earthRadius*1.1);
+            ofDrawCircle(0, 0, earthRadius*1.05);
             ofPopMatrix();
             
             // Pole
@@ -283,7 +298,6 @@ void ofApp::draw3dDisplay(){
     }
 }
 
-
 void ofApp::drawHeightDisplay(){
     
     // setup 2D viewport on the right
@@ -352,7 +366,6 @@ void ofApp::drawHeightDisplay(){
 
 void ofApp::updateGui(){
 
-    fps = ofGetFrameRate();
     dateSt = Poco::DateTimeFormatter::format(date, "%Y-%m-%d");
     timeSt = Poco::DateTimeFormatter::format(date, "%H:%M:%S");
 
@@ -366,7 +379,7 @@ void ofApp::updateGui(){
     
 }
 
-void ofApp::drawBG(){
+void ofApp::drawSky(){
 
     sun_brightness = ofxSunCalc::getSunBrightness(todayInfo, date);
     
@@ -417,7 +430,7 @@ void ofApp::keyPressed(int key){
     switch(key){
             
         case ' ':
-            bStart = !bStart;
+            appPrm.bStart = !appPrm.bStart;
             break;
             
         case OF_KEY_RIGHT:
@@ -451,5 +464,14 @@ void ofApp::keyPressed(int key){
         case 'e':
             bDrawEarth = !bDrawEarth;
             break;
+            
+        case 'b':
+            bDrawSky = !bDrawSky;
+            break;
+
+        case 'C':
+            bDrawCity = !bDrawCity;
+            break;
+
     }
 }
