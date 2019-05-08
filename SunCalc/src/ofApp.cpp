@@ -17,14 +17,14 @@ void ofApp::setup(){
     ofSetVerticalSync(false);
     
     // gui
-    gui.setup("settings", "/json/settings.json");
+    gui.setup("settings", "json/settings.json");
     gui.add(appGrp);
     gui.add(timeGrp);
     gui.add(geoGrp);
     gui.add(room.grp);
     gui.add(sunGrp);
     gui.add(moonGrp);
-    gui.loadFromFile("/json/settings.json");
+    gui.loadFromFile("json/settings.json");
 
     room.change();
 
