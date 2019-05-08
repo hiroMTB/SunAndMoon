@@ -76,8 +76,8 @@ void ofApp::draw(){
     ofEnableAlphaBlending();
     ofSetLineWidth(1);
     
-    //drawBG();
-    ofBackground(0,0,40);
+    drawBG();
+    //ofBackground(0,0,50);
     draw3dDisplay();
     
     ofDisableDepthTest();
