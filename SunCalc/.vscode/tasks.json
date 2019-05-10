@@ -36,10 +36,10 @@
                 "reveal": "always",
                 "panel": "shared"
             },
-            "command": "scan-build make Debug  -j7 -s 2>&1 || exit 1",
+            "command": "make Debug  -j7 -s 2>&1 || exit 1",
             "group": {
                 "kind": "build",
-                "isDefault": false
+                "isDefault": true
             },
             "problemMatcher": {
                 "owner": "cpp",
