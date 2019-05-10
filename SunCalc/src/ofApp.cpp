@@ -21,10 +21,10 @@ void ofApp::setup(){
     gui.add(appPrm.grp);
     gui.add(appGrp);
     gui.add(timeGrp);
-    gui.add(geoGrp);
-    gui.add(room.grp);
+    gui.add(earth.grp);
     gui.add(sunGrp);
     gui.add(moonGrp);
+    gui.add(room.grp);
     gui.loadFromFile("json/settings.json");
 
     room.change();
@@ -62,10 +62,13 @@ void ofApp::update(){
         date += speed;
     }
     
-    sunpos = sun_calc.getSunPosition(date, lat, lon);
-    todayInfo = sun_calc.getDayInfo(date, lat, lon, false);
+    float lat = earth.city.lat;
+    float lng = earth.city.lng;
+
+    sunpos = sun_calc.getSunPosition(date, lat, lng);
+    todayInfo = sun_calc.getDayInfo(date, lat, lng, false);
     
-    moonpos = sun_calc.getMoonPosition(date, lat, lon);
+    moonpos = sun_calc.getMoonPosition(date, lat, lng);
 
     ofxSunCalc::drawSimpleDayInfoTimeline(timeline, todayInfo);
 
@@ -86,6 +89,7 @@ void ofApp::draw(){
     drawHeightDisplay();
     
     gui.draw();
+    
 }
 
 void ofApp::draw3dDisplay(){
@@ -102,74 +106,10 @@ void ofApp::draw3dDisplay(){
 
     {
         cam.begin();
-        
-        if(bDrawEarth){
-            float earthRadius = 10000; //6378136.6 * 100;  // cm
-            float floorY = room.height.get()/2;
-            float oceanScale = 0.984;
-            float landScale  = 0.98;
-            
-            ofPushMatrix();
-            ofTranslate(0, -earthRadius-floorY);
-            
-            // Pin, Where we are
-            if(!room.bDrawRoom){
-                ofPushMatrix();
-                ofSetColor(255, 0, 150);
-                ofDrawLine(0,earthRadius+200, 0, earthRadius+400);
-                ofFill();
-                ofDrawSphere(vec3(0,earthRadius+400,0), 15);
-                ofPopMatrix();
-            }
+        earth.draw();
 
-            // ocean
-            ofSetColor(0, 0, 50);
-            ofFill();
-            ofDrawIcoSphere(0, 0, earthRadius*oceanScale);
-
-            ofRotateZDeg(90-lat);
-            ofRotateYDeg(-lon);
-            
-            
-            // City
-            if(bDrawCity){
-                for(auto & c : cityData.data){
-                    ofPushMatrix();
-                    ofRotateYDeg((180+c.lng));
-                    ofRotateZDeg(90-c.lat);
-                    ofTranslate(0, earthRadius+100);
-                    ofFill();
-                    ofSetColor(255);
-                    ofDrawSphere(0, 0, 5);
-                    //ofDrawBitmapString(c.name, 0, 0); // heavy
-                    ofPopMatrix();
-                }
-            }
-            
-            // The earth
-            ofPushMatrix();
-            ofScale(earthRadius*landScale);
-            ofScale(1.0/500);
-            ofSetColor(120);
-            earthObj.drawWireframe();
-            ofPopMatrix();
-
-            // Red line
-            ofPushMatrix();
-            ofRotateXDeg(90);
-            ofSetColor(255, 0, 0 );
-            ofNoFill();
-            ofDrawCircle(0, 0, earthRadius*1.05);
-            ofPopMatrix();
-            
-            // Pole
-            ofSetColor(0, 0, 255);
-            ofDrawLine(0, -earthRadius*1.2, 0, earthRadius*1.2);
-            ofPopMatrix();
-        }
-        
         // important, look at south
-        ofRotateYDeg(-90);
+        //ofRotateYDeg(-90);
         
         if(bDrawSphere){
             ofDrawAxis(10);
@@ -434,11 +374,19 @@ void ofApp::keyPressed(int key){
             break;
             
         case OF_KEY_RIGHT:
-            date += Poco::Timespan(1,0,0,0,0);
+            if(ofGetKeyPressed(OF_KEY_SHIFT)){
+                earth.city.goToNextCity();
+            }else{
+                date += Poco::Timespan(1,0,0,0,0);
+            }
             break;
     
         case OF_KEY_LEFT:
-            date -= Poco::Timespan(1,0,0,0,0);
+            if(ofGetKeyPressed(OF_KEY_SHIFT)){
+                earth.city.goToPrevCity();
+            }else{
+                date -= Poco::Timespan(1,0,0,0,0);
+            }
             break;
             
         case OF_KEY_UP:
@@ -462,7 +410,7 @@ void ofApp::keyPressed(int key){
             break;
             
         case 'e':
-            bDrawEarth = !bDrawEarth;
+            earth.bDrawEarth = !earth.bDrawEarth;
             break;
             
         case 'b':
@@ -470,7 +418,7 @@ void ofApp::keyPressed(int key){
             break;
 
         case 'C':
-            bDrawCity = !bDrawCity;
+            earth.city.bDrawCity = !earth.city.bDrawCity;
             break;
 
     }

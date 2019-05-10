@@ -7,7 +7,20 @@
             "Debug": "1",
             "Depth_Test": "1",
             "Target_FPS": "500",
-            "Vertical_Sync": "0"
+            "Vertical_Sync": "1"
+        },
+        "Earth": {
+            "City": {
+                "City_Id": "6279",
+                "City_Name": "Berlin",
+                "Country_Name": "Germany",
+                "draw_city": "1",
+                "latitude": "52.5218",
+                "longtitude": "13.4015"
+            },
+            "Earth_radius__cm_": "10000",
+            "draw_city": "1",
+            "draw_earth": "1"
         },
         "Room": {
             "depth__cm_": "900",
@@ -18,6 +31,7 @@
         },
         "app": {
             "draw_earth": "1",
+            "draw_sky": "0",
             "draw_sphere": "0",
             "fps": "60",
             "start": "0"
@@ -30,16 +44,16 @@
             "moon_brightness": "0"
         },
         "sun": {
-            "dawn": "04:05:05",
-            "dusk": "22:05:53",
-            "solar_noon": "13:05:29",
+            "dawn": "04:38:56",
+            "dusk": "21:29:19",
+            "solar_noon": "13:04:08",
             "sun_brightness": "1",
-            "sunrise": "04:52:19",
-            "sunset": "21:18:39"
+            "sunrise": "05:20:32",
+            "sunset": "20:47:43"
         },
         "time": {
-            "date": "2019-06-01",
-            "time": "06:23:02",
+            "date": "2019-05-11",
+            "time": "18:11:44",
             "update_speed__min_": "1"
         }
     }

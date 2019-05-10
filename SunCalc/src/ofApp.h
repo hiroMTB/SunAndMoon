@@ -6,6 +6,7 @@
 #include "ofxSunCalc.h"
 #include "ofxRaycaster.h"
 #include "Room.h"
+#include "Earth.h"
 #include "City.h"
 
 #include "AppParam.h"
@@ -33,15 +34,8 @@ public:
     
     // app
     ofParameter<bool> bDrawSky{"draw sky", false};
-    ofParameter<bool> bDrawCity{"draw city", false};
     ofParameter<bool> bDrawSphere{"draw sphere", false};
-    ofParameter<bool> bDrawEarth{"draw earth", true};
-    ofParameterGroup appGrp{"app", bDrawSky, bDrawCity, bDrawSphere, bDrawEarth};
-
-    // geo (default Berlin)
-    ofParameter<float> lat{"latitude", 52.52, -60, 60};
-    ofParameter<float> lon{"longtitude", 13.40, -180, 180};
-    ofParameterGroup geoGrp{"geo", lat, lon};
+    ofParameterGroup appGrp{"app", bDrawSky, bDrawSphere};
 
     // time
     ofParameter<string> dateSt{"date", "n.a."};
@@ -88,5 +82,6 @@ public:
 
     Room room;
 
-    CityData cityData;
+    Earth earth;
+
 };
