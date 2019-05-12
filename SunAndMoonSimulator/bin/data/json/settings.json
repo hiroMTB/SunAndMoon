@@ -1,5 +1,14 @@
 {
     "settings": {
+        "App": {
+            "Alpha_Blending": "1",
+            "Anti_Aliasing": "1",
+            "Background_Color": "0, 0, 0, 255",
+            "Debug": "1",
+            "Depth_Test": "1",
+            "Target_FPS": "500",
+            "Vertical_Sync": "0"
+        },
         "App_Settings": {
             "Alpha_Blending": "1",
             "Anti_Aliasing": "1",
@@ -11,23 +20,58 @@
         },
         "Earth": {
             "City": {
-                "City_Id": "6279",
+                "City": "Fukuoka",
+                "City_Id": "7824",
                 "City_Name": "Berlin",
+                "Country": "Japan",
                 "Country_Name": "Germany",
+                "Estimated_time_zone": "9",
                 "draw_city": "1",
-                "latitude": "52.5218",
-                "longtitude": "13.4015"
+                "latitude": "33.595",
+                "longtitude": "130.41"
             },
             "Earth_radius__cm_": "10000",
             "draw_city": "1",
-            "draw_earth": "1"
+            "draw_earth": "1",
+            "draw_sky": "1"
+        },
+        "Export": {
+            "export_moon_:_sky_trajectry": "1",
+            "export_moon_:_wall_trajectry": "1",
+            "export_sun_:_sky_trajectry": "1",
+            "export_sun_:_wall_trajectry": "1"
+        },
+        "Moon": {
+            "draw_moon": "1",
+            "moon_brightness": "0",
+            "moon_position__vec_": "0.245626, -0.651515, 0.717771"
         },
         "Room": {
             "depth__cm_": "900",
-            "draw_room": "0",
+            "draw_compass": "1",
+            "draw_room": "1",
             "height__cm_": "350",
             "orientation": "0, 0, 0",
             "width__cm_": "750"
+        },
+        "Sun": {
+            "dawn": "04:53:57",
+            "draw_sun": "1",
+            "dusk": "19:38:10",
+            "solar_noon": "03:16:03",
+            "sun_altitude": "12.9048",
+            "sun_azimuth": "-283.383",
+            "sun_brightness": "0",
+            "sun_position__vec_": "-0.948274, 0.223332, 0.225609",
+            "sunrise": "05:21:14",
+            "sunset": "19:10:52"
+        },
+        "Time": {
+            "Local_time": "06:30:02",
+            "UTC_time": "21:30:02",
+            "date": "2019-05-12",
+            "time": "15:10:51",
+            "update_speed__min_": "1"
         },
         "app": {
             "draw_earth": "1",

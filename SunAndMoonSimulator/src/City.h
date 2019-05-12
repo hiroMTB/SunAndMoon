@@ -47,10 +47,12 @@ namespace sunandmoon{
                     v = glm::rotateX(v, ofDegToRad(latitude));
                     v = glm::rotateY(v, ofDegToRad(longitude));
                     cityVbo.addVertex(v);
-                    cityVbo.addVertex(v*1.0025);
+                    cityVbo.addVertex(v*1.0005);
 
                     nCity++;
                 }
+            }else{
+                ofLogError() << "Can not find CityData json file : " << file.getAbsolutePath();
             }
 
             cityId.setMax( nCity );
@@ -61,6 +63,7 @@ namespace sunandmoon{
         }
         
         void draw(){
+            ofSetColor(255,0,150);
             cityVbo.draw();
         }
 
