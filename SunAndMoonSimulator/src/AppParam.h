@@ -46,7 +46,7 @@ namespace module{
         //ofParameter<bool> bSmoothing{"Smoothing", true};
         ofParameter<bool> bVerticalSync{"Vertical Sync", true};
         ofParameter<ofColor> bg{"Background Color", ofColor(0), ofColor(0), ofColor(255) };
-        ofParameterGroup grp{"App Settings", bStart, bDebug, targetFps, fps, bAntiAliasing, bDepthTest, bAlphaBlending, /*bSmoothing,*/ bVerticalSync, bg};
+        ofParameterGroup grp{"App", bStart, bDebug, targetFps, fps, bAntiAliasing, bDepthTest, bAlphaBlending, /*bSmoothing,*/ bVerticalSync, bg};
         
     };
 }

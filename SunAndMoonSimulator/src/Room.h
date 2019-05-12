@@ -17,6 +17,11 @@ namespace sunandmoon{
             humanObj.loadModel("obj/human.obj");
             humanObj.setScale(0.2, 0.2, 0.2);
 
+            roomObj.loadModel("obj/room2.obj");
+            roomObj.setRotation(0, 180, 0, 0, 1);
+            //humanObj.setScale(0.2, 0.2, 0.2);
+
+            
             // listener
             cbs.push( width.newListener( [&](float & f){ change(); }));
             cbs.push( height.newListener([&](float & f){ change(); }));
@@ -168,6 +173,10 @@ namespace sunandmoon{
             ofSetColor(150);
             humanObj.drawWireframe();
 
+            // human
+            ofSetColor(150);
+            roomObj.drawWireframe();
+
             ofPopMatrix();
         }
 
@@ -179,15 +188,18 @@ namespace sunandmoon{
         ofVboMesh moonWallPath;
 
         ofParameter<bool> bDrawRoom{"draw room", false};
+        ofParameter<bool> bDrawCompass{"draw compass", false};
         ofParameter<float> width{"width (cm)", 750, 100, 1000};
         ofParameter<float> height{"height (cm)", 350, 100, 1000};
         ofParameter<float> depth{"depth (cm)", 900, 100, 1000};
         ofParameter<vec3>  orientation{"orientation", vec3(0), -vec3(180), vec3(180)};
-        ofParameterGroup grp{"Room", bDrawRoom, width, height, depth, orientation};
+        ofParameterGroup grp{"Room", bDrawRoom, bDrawCompass, width, height, depth, orientation};
 
         vec3 sunOnTheWall;
         vec3 moonOnTheWall;
         ofxAssimpModelLoader humanObj;
+
+        ofxAssimpModelLoader roomObj;
 
         ofEventListeners cbs;
     };

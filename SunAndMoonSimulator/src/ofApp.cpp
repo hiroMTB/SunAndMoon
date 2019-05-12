@@ -6,6 +6,8 @@
 
 void ofApp::setup(){
     
+    ofSetDataPathRoot("../Resources/data/");
+    
     ofSetWindowTitle("SunCalc");
     ofSetWindowPosition(0, 0);
     ofSetWindowShape(1920, 1080);
@@ -17,17 +19,20 @@ void ofApp::setup(){
     ofSetVerticalSync(false);
     
     // gui
+    cbs.push(btnExport.newListener( [&](void){ exportTraj(); }));
+    
     gui.setup("settings", "json/settings.json");
     gui.add(appPrm.grp);
-    gui.add(appGrp);
     gui.add(timeGrp);
     gui.add(earth.grp);
     gui.add(sunGrp);
     gui.add(moonGrp);
     gui.add(room.grp);
+    gui.add(expGrp);
     gui.loadFromFile("json/settings.json");
-
     room.change();
+    
+    gui.minimizeAll();
 
     // set date NOW
     date = Poco::LocalDateTime();
@@ -79,8 +84,8 @@ void ofApp::draw(){
     appPrm.set();
     ofSetLineWidth(1);
     
-    bDrawSky ? drawSky()
-              : ofBackground(0,0,50);
+    earth.bDrawSky ? drawSky()
+                   : ofBackground(0,0,50);
     
     draw3dDisplay();
     
@@ -107,26 +112,37 @@ void ofApp::draw3dDisplay(){
     {
         cam.begin();
         earth.draw();
-
-        // important, look at south
-        //ofRotateYDeg(-90);
         
-        if(bDrawSphere){
-            ofDrawAxis(10);
-
-            ofSetColor(255);
+        vec3 origin = sunRay.getOrigin();
+        
+        ofDrawAxis(10);
+        
+        if(room.bDrawCompass){            
             ofPushMatrix();
-            ofTranslate(0, -room.height/2);
+            ofTranslate(origin);
+            
+            {
+                ofPushMatrix();
+                ofRotateXDeg(90);
+                ofNoFill();
+                ofSetColor(255);
+                ofDrawCircle(0, 0, rad);
+                ofDrawLine(vec2(-rad, 0), vec2(rad, 0));
+                ofDrawLine(vec2(0, -rad), vec2(0, rad));
+                ofPopMatrix();
+            }
+            
+            ofTranslate(0, 20, 0);
             ofDrawBitmapString("N", north*rad);
             ofDrawBitmapString("E", east*rad);
             ofDrawBitmapString("S", south*rad);
             ofDrawBitmapString("W", west*rad);
+        
             ofPopMatrix();
         }
         
         // calc sun position
         {
-            vec3 origin = sunRay.getOrigin();
             float az = sunpos.azimuth - PI;     // 0 - 360, looks like something wrong in ofxSunCalc, so
             float alt = sunpos.altitude;        //
             
@@ -136,7 +152,28 @@ void ofApp::draw3dDisplay(){
             vec3 sunPos3 = vec3(sunPos2.x, 0, sunPos2.z);       // this is projected position (z=0 plane)
             sunPosVec = sunPos2;
             
-            if(bDrawSphere){
+            // ray
+            sunRay.setDirection(glm::normalize(sunPos2));
+
+            int nMesh = room.roomObj.getNumMeshes();
+            for(int i=0; i<nMesh; i++){
+                glm::vec3 baricentricCoordinates;
+                glm::vec3 surfaceNormal;
+
+                const ofMesh & m = room.roomObj.getMesh(i);
+                bool bHit = (sunRay.intersectsMesh(m, baricentricCoordinates, surfaceNormal));
+                if(bHit){
+                    vec3 intersection = sunRay.getOrigin() + sunRay.getDirection() * baricentricCoordinates.z;
+                    room.addSunTrace(intersection);
+                }
+            }
+
+            // vbo
+            sunPath.addVertex(sunPos2*rad + origin);
+
+            if(bDrawSun){
+
+                // guide lines
                 ofSetColor(200);
                 ofDrawLine(origin, sunPos1*rad+origin);
                 ofDrawLine(sunPos2*rad+origin, sunPos3*rad+origin);
@@ -144,43 +181,18 @@ void ofApp::draw3dDisplay(){
                 ofSetColor(250, 0, 0);
                 ofDrawLine(origin, sunPos2*rad+origin);
 
+                // sun on the sky
                 ofFill();
-                ofDrawSphere(sunPos2*rad + origin, sunSize);            
-            }
-            
-            // ray
-            sunRay.setDirection(glm::normalize(sunPos2));
-            glm::vec3 baricentricCoordinates;
-            glm::vec3 surfaceNormal;
+                ofDrawSphere(sunPos2*rad + origin, sunSize);
 
-            bool bHit = (sunRay.intersectsPrimitive(room.box, baricentricCoordinates, surfaceNormal));
-            if(bHit){
-                vec3 intersection = sunRay.getOrigin() + sunRay.getDirection() * baricentricCoordinates.z;
-                room.addSunTrace(intersection);
-            }
-
-            // vbo
-            sunPath.addVertex(sunPos2*rad + origin);
-
-            ofSetColor(250, 0, 0);
-            if(bDrawSphere){
+                // sun traj on the sky
+                ofSetColor(250, 0, 0);
                 sunPath.drawVertices();
-            
-                // circle
-                ofSetColor(150);
-                ofPushMatrix();
-                ofTranslate(origin);
-                ofRotateXDeg(90);
-                ofNoFill();
-                ofDrawCircle(0, 0, rad);
-                ofPopMatrix();
             }
         }
         
         // moon
         {
-            vec3 origin = moonRay.getOrigin();
-            
             float az = moonpos.azimuth - PI;     // 0 - 360, looks like something wrong in ofxSunCalc, so
             float alt = moonpos.altitude;        //
             
@@ -190,17 +202,6 @@ void ofApp::draw3dDisplay(){
             vec3 moonPos3 = vec3(moonPos2.x, 0, moonPos2.z);       // this is projected position (z=0 plane)
             moonPosVec = moonPos2;
             
-            if(bDrawSphere){
-                ofSetColor(200);
-                ofDrawLine(origin, moonPos1*rad+origin);
-                ofDrawLine(moonPos2*rad+origin, moonPos3*rad+origin);
-                
-                ofSetColor(250, 250, 0);
-                ofDrawLine(origin, moonPos2*rad+origin);
-
-                ofFill();
-                ofDrawSphere(moonPos2*rad+origin, moonSize);
-            }
             
             // ray
             moonRay.setDirection(glm::normalize(moonPos2));
@@ -216,19 +217,23 @@ void ofApp::draw3dDisplay(){
             // vbo
             moonPath.addVertex(moonPos2*rad+origin);
 
-            ofSetColor(250, 250, 0);
-
-            if(bDrawSphere){
-                moonPath.drawVertices();
+            if(bDrawMoon){
             
-                // circle
-                ofSetColor(150);
-                ofPushMatrix();
-                ofTranslate(origin);
-                ofRotateXDeg(90);
-                ofNoFill();
-                ofDrawCircle(0, 0, rad);
-                ofPopMatrix();
+                // guide lines
+                ofSetColor(200);
+                ofDrawLine(origin, moonPos1*rad+origin);
+                ofDrawLine(moonPos2*rad+origin, moonPos3*rad+origin);
+                
+                ofSetColor(250, 250, 0);
+                ofDrawLine(origin, moonPos2*rad+origin);
+                
+                // moon on the sky
+                ofFill();
+                ofDrawSphere(moonPos2*rad+origin, moonSize);
+                
+                // traj on the sky
+                ofSetColor(250, 250, 0);
+                moonPath.drawVertices();
             }
         }
         
@@ -404,22 +409,44 @@ void ofApp::keyPressed(int key){
         case 'r':
             room.bDrawRoom = !room.bDrawRoom;
             break;
-
-        case 's':
-            bDrawSphere = !bDrawSphere;
-            break;
             
         case 'e':
             earth.bDrawEarth = !earth.bDrawEarth;
             break;
             
-        case 'b':
-            bDrawSky = !bDrawSky;
-            break;
-
         case 'C':
             earth.city.bDrawCity = !earth.city.bDrawCity;
             break;
 
+    }
+}
+
+void ofApp::exportTraj(){
+    
+    string message = "Export .ply file, please select file prefix name";
+    string defaultFilename = "sm_";
+    ofFileDialogResult saveFileResult = ofSystemSaveDialog(defaultFilename, message);
+    if (saveFileResult.bSuccess){
+        
+        string filename = saveFileResult.filePath;
+        
+        if(bExportSunSky){
+            sunPath.save(filename + "_sun-sky.ply");
+        }
+        
+        if(bExportMoonSky){
+            moonPath.save(filename + "_moon-sky.ply");
+        }
+        
+        if(bExportSunWall){
+            room.sunWallPath.save(filename + "_sun-wall.ply");
+        }
+        
+        if(bExportMoonWall){
+            room.moonWallPath.save(filename + "_moon-wall.ply");
+        }
+        
+    }else{
+        cout << "error" << endl;
     }
 }

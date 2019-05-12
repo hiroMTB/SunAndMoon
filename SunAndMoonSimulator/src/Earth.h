@@ -22,7 +22,7 @@ namespace sunandmoon{
                 ofLogError() << "can not find earth texture";
             }
 
-            sphere.set(earthRadius, 64);
+            sphere.set(1, 64);
             sphere.setScale(1);
             sphere.setPosition(vec3(0, 0, 0));
             //sphere.setOrientation(vec3(0, 180, 0));
@@ -57,9 +57,12 @@ namespace sunandmoon{
                 // earth
                 ofEnableAlphaBlending();
                 ofSetColor(255);
+                ofPushMatrix();
+                ofScale(earthRadius);
                 tex.bind();
                 sphere.draw();
                 tex.unbind();
+                ofPopMatrix();
 
                 // Red line
                 ofPushMatrix();
@@ -91,9 +94,10 @@ namespace sunandmoon{
         ofSpherePrimitive sphere;
         City city;
 
+        ofParameter<bool> bDrawSky{"draw sky", false};
         ofParameter<float> earthRadius{"Earth radius (cm)", 10000, 100, 6378136.6 * 100};
         ofParameter<bool> bDrawEarth{"draw earth", true};
-        ofParameterGroup grp{"Earth", bDrawEarth, earthRadius, city.grp};
+        ofParameterGroup grp{"Earth", bDrawEarth, bDrawSky, earthRadius, city.grp};
 
     };
 }

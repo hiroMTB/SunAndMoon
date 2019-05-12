@@ -28,39 +28,45 @@ public:
     void drawSky();
     void clearVbo();
     void keyPressed(int key);
+    
+    void exportTraj();
 
     // app param
     AppParam appPrm;
     
-    // app
-    ofParameter<bool> bDrawSky{"draw sky", false};
-    ofParameter<bool> bDrawSphere{"draw sphere", false};
-    ofParameterGroup appGrp{"app", bDrawSky, bDrawSphere};
-
     // time
     ofParameter<string> dateSt{"date", "n.a."};
     ofParameter<string> timeSt{"time", "n.a."};
     ofParameter<int> updateSpeed{"update speed (min)", 1, 0, 60*24*30};
-    ofParameterGroup timeGrp{"time", dateSt, timeSt, updateSpeed};
+    ofParameterGroup timeGrp{"Time", dateSt, timeSt, updateSpeed};
 
     // sun
+    ofParameter<bool > bDrawSun{"draw sun", true};
     ofParameter<float> sun_brightness{"sun brightness", 0, 0, 100};
     ofParameter<vec3> sunPosVec{"sun position (vec)", vec3(0), vec3(-1), vec3(1) };
     ofParameter<float> sun_altitude{"sun altitude", 0, -180, 180};
     ofParameter<float> sun_azimuth{"sun azimuth", 0, -180, 180};
-
     ofParameter<string> sun_dawn{"dawn", "n.a."};
     ofParameter<string> sun_rise{"sunrise", "n.a."};
     ofParameter<string> sun_noon{"solar noon", "n.a."};
     ofParameter<string> sun_set{"sunset", "n.a."};
     ofParameter<string> sun_dusk{"dusk", "n.a."};    
-    ofParameterGroup sunGrp{"sun", sun_brightness, sun_dawn, sun_rise, sun_noon, sun_set, sun_dusk};
+    ofParameterGroup sunGrp{"Sun", bDrawSun, sun_brightness, sunPosVec, sun_altitude, sun_azimuth, sun_dawn, sun_rise, sun_noon, sun_set, sun_dusk};
 
     // moon
+    ofParameter<bool > bDrawMoon{"draw moon", true};
     ofParameter<float> moon_brightness{"moon brightness", 0, 0, 100};
     ofParameter<vec3> moonPosVec{"moon position (vec)", vec3(0), vec3(-1), vec3(1) };
-    ofParameterGroup moonGrp{"moon", moon_brightness};
+    ofParameterGroup moonGrp{"Moon", bDrawMoon, moon_brightness, moonPosVec};
 
+    // export
+    ofParameter<bool> bExportSunSky{"export sun : sky trajectry", true};
+    ofParameter<bool> bExportMoonSky{"export moon : sky trajectry", true};
+    ofParameter<bool> bExportSunWall{"export sun : wall trajectry", true};
+    ofParameter<bool> bExportMoonWall{"export moon : wall trajectry", true};
+    ofParameter<void> btnExport{"Start Export"};
+    ofParameterGroup expGrp{"Export", bExportSunSky, bExportMoonSky, bExportSunWall, bExportMoonWall, btnExport};
+    
     ofxPanel gui;
 
     ofFbo timeline;        
@@ -84,4 +90,5 @@ public:
 
     Earth earth;
 
+    ofEventListeners cbs;
 };

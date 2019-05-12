@@ -6,7 +6,7 @@
     "tasks": [
         {
             "type": "shell",
-            "label": "OPENFRAMEWORKS BUILD RELEASE",
+            "label": "Build RELEASE",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared"
@@ -31,7 +31,7 @@
         },
         {
             "type": "shell",
-            "label": "OPENFRAMEWORKS BUILD DEBUG",
+            "label": "Build DEBUG",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared"
@@ -56,51 +56,78 @@
         },
         {
             "type": "shell",
-            "label": "build Release",
+            "label": "Clean DEBUG",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared"
             },
-            "command": "make",
-            "args": [
-                "Release"
-            ]
+            "command": "make CleanDebug",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "cpp",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": {
+                  "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                  "file": 1,
+                  "line": 2,
+                  "column": 3,
+                  "severity": 4,
+                  "message": 5
+                }
+              }
         },
         {
             "type": "shell",
-            "label": "clean Debug",
+            "label": "Clean RELEASE",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared"
             },
-            "command": "make",
-            "args": [
-                "CleanDebug"
-            ]
+            "command": "make CleanRelease",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": {
+                "owner": "cpp",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": {
+                  "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                  "file": 1,
+                  "line": 2,
+                  "column": 3,
+                  "severity": 4,
+                  "message": 5
+                }
+              }
         },
         {
             "type": "shell",
-            "label": "clean Release",
+            "label": "Clean ALL",
             "presentation": {
                 "reveal": "always",
                 "panel": "shared"
             },
-            "command": "make",
-            "args": [
-                "CleanRelease"
-            ]
-        },
-        {
-            "type": "shell",
-            "label": "clean All",
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared"
+            "command": "make clean",
+            "group": {
+                "kind": "build",
+                "isDefault": true
             },
-            "command": "make",
-            "args": [
-                "clean"
-            ]
-        }
+            "problemMatcher": {
+                "owner": "cpp",
+                "fileLocation": ["relative", "${workspaceFolder}"],
+                "pattern": {
+                  "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                  "file": 1,
+                  "line": 2,
+                  "column": 3,
+                  "severity": 4,
+                  "message": 5
+                }
+              }
+         }
     ]
 }

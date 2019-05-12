@@ -2,7 +2,6 @@
 //  City.h
 //
 
-
 #pragma once
 
 #include "ofMain.h"
@@ -15,9 +14,10 @@ namespace sunandmoon{
     struct CityData{
 
     public:
-        CityData(string _name, string _country, float _lat, float _lng)
-        :name(_name), country(_country), lat(_lat), lng(_lng){}
-        
+        CityData(int _cityId, string _name, string _country, float _lat, float _lng)
+        :cityId(_cityId), name(_name), country(_country), lat(_lat), lng(_lng){}
+
+        int cityId;
         string name;
         string country;
         float lat;
@@ -37,11 +37,11 @@ namespace sunandmoon{
                 for (ofBuffer::Line it = ++buffer.getLines().begin(), end = buffer.getLines().end(); it != end; ++it) {
                     string line = *it;
                     vector<string> words = ofSplitString(line, ",");
-                    string cityName = words[0];
+                    string cityName = words[1];
                     string countryName = words[4];
                     float latitude = ofToFloat(words[2]);
                     float longitude = ofToFloat(words[3]);
-                    data.emplace_back( cityName, countryName, latitude, longitude );
+                    data.emplace_back( nCity, cityName, countryName, latitude, longitude );
 
                     vec3 v(0,0,-1);
                     v = glm::rotateX(v, ofDegToRad(latitude));
@@ -55,6 +55,9 @@ namespace sunandmoon{
 
             cityId.setMax( nCity );
             cityVbo.setMode(OF_PRIMITIVE_LINES);
+            
+            cbs.push( cityId.newListener([&](int & i){setCityId(cityId);}));
+            cbs.push( cityName.newListener([&](string & s){ setCityByName(s);}));
         }
         
         void draw(){
@@ -77,11 +80,22 @@ namespace sunandmoon{
             lat = c.lat;
             lng = c.lng;
         }
+        
+        void setCityByName(string & name){
+            vector<CityData>::iterator itr = std::find_if(data.begin(),data.end(),[&](const CityData & c){ return (c.name == name);});
+            if(itr != data.end()){
+                setCityId(itr->cityId);
+            }else{
+                cityName = "Can not find city name";
+                countryName = "Can not find city name";
+                cityId = -1;
+            }
+        }
 
         ofParameter<bool> bDrawCity{"draw city", false};
-        ofParameter<int> cityId{"City Id", 0, 0, 10000};
-        ofParameter<string> cityName{"City Name", "n.a."};
-        ofParameter<string> countryName{"Country Name", "n.a."};
+        ofParameter<int> cityId{"City Id", 6279, -1, 10000};
+        ofParameter<string> cityName{"City", "Berlin"};
+        ofParameter<string> countryName{"Country", "Germany"};
         ofParameter<float> lat{"latitude", 52.52, -90, 90};
         ofParameter<float> lng{"longtitude", 13.40, -180, 180};
 
@@ -92,6 +106,8 @@ namespace sunandmoon{
 
     private:
         int nCity = 0;
+        
+        ofEventListeners cbs;
 
     };
 }
