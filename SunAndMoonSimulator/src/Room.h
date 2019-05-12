@@ -16,11 +16,6 @@ namespace sunandmoon{
             // 3D humanObj
             humanObj.loadModel("obj/human.obj");
             humanObj.setScale(0.2, 0.2, 0.2);
-
-            roomObj.loadModel("obj/room2.obj");
-            roomObj.setRotation(0, 180, 0, 0, 1);
-            //humanObj.setScale(0.2, 0.2, 0.2);
-
             
             // listener
             cbs.push( width.newListener( [&](float & f){ change(); }));
@@ -173,10 +168,6 @@ namespace sunandmoon{
             ofSetColor(150);
             humanObj.drawWireframe();
 
-            // human
-            ofSetColor(150);
-            roomObj.drawWireframe();
-
             ofPopMatrix();
         }
 
@@ -198,8 +189,6 @@ namespace sunandmoon{
         vec3 sunOnTheWall;
         vec3 moonOnTheWall;
         ofxAssimpModelLoader humanObj;
-
-        ofxAssimpModelLoader roomObj;
 
         ofEventListeners cbs;
     };
