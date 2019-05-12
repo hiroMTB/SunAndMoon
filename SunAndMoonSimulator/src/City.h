@@ -73,6 +73,11 @@ namespace sunandmoon{
         }
 
         void setCityId(int id){
+            if(nCity == 0){
+                ofLogError() << "CityData is empty" << endl;
+                setError();
+                return;
+            }
             cityId = id % nCity;
             CityData & c = data[cityId];
             cityName = c.name;
@@ -86,20 +91,24 @@ namespace sunandmoon{
             if(itr != data.end()){
                 setCityId(itr->cityId);
             }else{
-                cityName = "Can not find city name";
-                countryName = "Can not find city name";
-                cityId = -1;
+                setError();
             }
         }
 
+        void setError(){
+            cityName = "Can not find city name";
+            countryName = "Can not find city name";
+            cityId = -1;
+        }
+        
         ofParameter<bool> bDrawCity{"draw city", false};
         ofParameter<int> cityId{"City Id", 6279, -1, 10000};
         ofParameter<string> cityName{"City", "Berlin"};
         ofParameter<string> countryName{"Country", "Germany"};
         ofParameter<float> lat{"latitude", 52.52, -90, 90};
         ofParameter<float> lng{"longtitude", 13.40, -180, 180};
-
-        ofParameterGroup grp{"City", bDrawCity, cityId, cityName, countryName, lat, lng};
+        ofParameter<int> timezone{"Estimated time zone", 0, -12, 12};
+        ofParameterGroup grp{"City", bDrawCity, cityId, cityName, countryName, lat, lng, timezone};
 
         vector<CityData> data;
         ofVboMesh cityVbo;

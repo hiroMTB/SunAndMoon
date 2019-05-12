@@ -16,16 +16,15 @@ namespace sunandmoon{
 
         Earth(){
             ofDisableArbTex();
-            //tex.setAlphaMask(mask);
-            bool ok = ofLoadImage(tex, "img/Albedo.jpg"); // "img/GDEM-10km-BW_tr.png");
+            string p = ofToDataPath("img/Albedo.jpg", true);
+            bool ok = ofLoadImage(tex, p); // "img/GDEM-10km-BW_tr.png");
             if(!ok){
-                ofLogError() << "can not find earth texture";
+                ofLogError() << "Can not find CityData json file : " << p;
             }
 
             sphere.set(1, 64);
             sphere.setScale(1);
             sphere.setPosition(vec3(0, 0, 0));
-            //sphere.setOrientation(vec3(0, 180, 0));
         }
         
         ~Earth(){
