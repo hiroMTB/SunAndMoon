@@ -34,9 +34,6 @@ void ofApp::setup(){
     
     gui.minimizeAll();
 
-    // set date NOW
-    date = Poco::LocalDateTime();
-
     //cam.setFov(60);
     cam.setNearClip(100);
     cam.setFarClip(numeric_limits<float>::max()*0.001);
@@ -64,17 +61,30 @@ void ofApp::update(){
     
     if(appPrm.bStart) {
         Poco::Timespan speed(0, 0, updateSpeed, 0, 0);
-        date += speed;
+        utcDate += speed;
     }
     
     float lat = earth.city.lat;
     float lng = earth.city.lng;
 
-    sunpos = sun_calc.getSunPosition(date, lat, lng);
-    todayInfo = sun_calc.getDayInfo(date, lat, lng, false);
+    sunpos = sun_calc.getSunPosition(utcDate, lat, lng);
     
-    moonpos = sun_calc.getMoonPosition(date, lat, lng);
+    moonpos = sun_calc.getMoonPosition(utcDate, lat, lng);
+    sunpos.azimuth += PI;   // something wrong in ofxSunCalc
+    moonpos.azimuth += PI;   // something wrong in ofxSunCalc
 
+    todayInfo = sun_calc.getDayInfo(utcDate, lat, lng, false);
+
+    //
+    int tz = earth.city.timezone = round(lng / 180.0 * 12.0);
+    Poco::Timespan dateOffset(0,tz,0,0,0);
+    todayInfo.sunrise.start += dateOffset;
+    todayInfo.sunrise.end += dateOffset;
+    todayInfo.sunset.start += dateOffset;
+    todayInfo.sunset.end += dateOffset;
+    todayInfo.dawn += dateOffset;
+    todayInfo.dusk += dateOffset;
+    
     ofxSunCalc::drawSimpleDayInfoTimeline(timeline, todayInfo);
 
     updateGui();
@@ -311,8 +321,12 @@ void ofApp::drawHeightDisplay(){
 
 void ofApp::updateGui(){
 
-    dateSt = Poco::DateTimeFormatter::format(date, "%Y-%m-%d");
-    timeSt = Poco::DateTimeFormatter::format(date, "%H:%M:%S");
+    dateSt = Poco::DateTimeFormatter::format(utcDate, "%Y-%m-%d");
+    utcTimeSt = Poco::DateTimeFormatter::format(utcDate, "%H:%M:%S");
+
+    int tz = earth.city.timezone;
+    Poco::Timespan dateOffset(0,tz,0,0,0);
+    localTimeSt = Poco::DateTimeFormatter::format(utcDate+dateOffset, "%H:%M:%S");
 
     sun_altitude = sunpos.altitude * RAD_TO_DEG;
     sun_azimuth  = sunpos.azimuth * RAD_TO_DEG;
@@ -326,7 +340,7 @@ void ofApp::updateGui(){
 
 void ofApp::drawSky(){
 
-    sun_brightness = ofxSunCalc::getSunBrightness(todayInfo, date);
+    sun_brightness = ofxSunCalc::getSunBrightness(todayInfo, utcDate);
     
     if(ofGetKeyPressed(OF_KEY_COMMAND)) {
         sun_brightness = fabs(sin(ofGetElapsedTimef()*.1));
@@ -356,8 +370,9 @@ void ofApp::drawBar(){
     timeline.draw(tx, ty);
     
     // Draw a current time mark
+    int tz = earth.city.timezone;
     float pixels_per_min = (timeline.getWidth() / 24) / 60.0;
-    float nx = tx + pixels_per_min * (date.hour() * 60 + date.minute());
+    float nx = tx + pixels_per_min * ((utcDate.hour()+tz) * 60 + utcDate.minute());
     ofSetColor(255, 0, 0);
     ofSetLineWidth(1.0);
     ofDrawLine(nx, ty, nx, ty+timeline.getHeight());
@@ -382,7 +397,7 @@ void ofApp::keyPressed(int key){
             if(ofGetKeyPressed(OF_KEY_SHIFT)){
                 earth.city.goToNextCity();
             }else{
-                date += Poco::Timespan(1,0,0,0,0);
+                utcDate += Poco::Timespan(1,0,0,0,0);
             }
             break;
     
@@ -390,16 +405,16 @@ void ofApp::keyPressed(int key){
             if(ofGetKeyPressed(OF_KEY_SHIFT)){
                 earth.city.goToPrevCity();
             }else{
-                date -= Poco::Timespan(1,0,0,0,0);
+                utcDate -= Poco::Timespan(1,0,0,0,0);
             }
             break;
             
         case OF_KEY_UP:
-            date += Poco::Timespan(30,0,0,0,0);
+            utcDate += Poco::Timespan(30,0,0,0,0);
             break;
             
         case OF_KEY_DOWN:
-            date -= Poco::Timespan(30,0,0,0,0);
+            utcDate -= Poco::Timespan(30,0,0,0,0);
             break;
 
         case 'c':

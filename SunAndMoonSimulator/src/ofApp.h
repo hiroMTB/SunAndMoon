@@ -36,9 +36,10 @@ public:
     
     // time
     ofParameter<string> dateSt{"date", "n.a."};
-    ofParameter<string> timeSt{"time", "n.a."};
+    ofParameter<string> utcTimeSt{"UTC time", "n.a."};
+    ofParameter<string> localTimeSt{"Local time", "n.a."};
     ofParameter<int> updateSpeed{"update speed (min)", 1, 0, 60*24*30};
-    ofParameterGroup timeGrp{"Time", dateSt, timeSt, updateSpeed};
+    ofParameterGroup timeGrp{"Time", dateSt, utcTimeSt, localTimeSt, updateSpeed};
 
     // sun
     ofParameter<bool > bDrawSun{"draw sun", true};
@@ -51,7 +52,7 @@ public:
     ofParameter<string> sun_noon{"solar noon", "n.a."};
     ofParameter<string> sun_set{"sunset", "n.a."};
     ofParameter<string> sun_dusk{"dusk", "n.a."};    
-    ofParameterGroup sunGrp{"Sun", bDrawSun, sun_brightness, sunPosVec, sun_altitude, sun_azimuth, sun_dawn, sun_rise, sun_noon, sun_set, sun_dusk};
+    ofParameterGroup sunGrp{"Sun", bDrawSun, sun_brightness, sunPosVec, sun_azimuth, sun_altitude, sun_dawn, sun_rise, sun_noon, sun_set, sun_dusk};
 
     // moon
     ofParameter<bool > bDrawMoon{"draw moon", true};
@@ -76,7 +77,7 @@ public:
     ofVboMesh moonPath;
 
     // ofx
-    Poco::LocalDateTime date;
+    Poco::DateTime utcDate;
     ofxAssimpModelLoader earthObj;
     
     ofxraycaster::Ray sunRay;
