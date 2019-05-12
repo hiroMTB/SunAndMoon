@@ -5,23 +5,24 @@
 #include "Poco/Timespan.h"
 
 void ofApp::setup(){
+
+    static const int version = 1;
+    ofSetWindowTitle("SunAndMoon Simulator v" + ofToString(version,0));
+
+    int sw = ofGetScreenWidth();
+    int sh = ofGetScreenHeight();
     
-    ofSetDataPathRoot("../Resources/data/");
-    
-    ofSetWindowTitle("SunCalc");
     ofSetWindowPosition(0, 0);
-    ofSetWindowShape(1920, 1080);
+    ofSetWindowShape(sw, sh);
     ofSetSphereResolution(12);
     ofSetCircleResolution(128);
     ofSetIcoSphereResolution(4);
-
-    ofSetFrameRate(60);
-    ofSetVerticalSync(false);
     
     // gui
     cbs.push(btnExport.newListener( [&](void){ exportTraj(); }));
     
-    gui.setup("settings", "json/settings.json");
+    string settingPath = ofToDataPath("json/settings.json");
+    gui.setup("settings", settingPath);
     gui.add(appPrm.grp);
     gui.add(timeGrp);
     gui.add(earth.grp);
@@ -29,7 +30,7 @@ void ofApp::setup(){
     gui.add(moonGrp);
     gui.add(room.grp);
     gui.add(expGrp);
-    gui.loadFromFile("json/settings.json");
+    gui.loadFromFile(settingPath);
     room.change();
     
     gui.minimizeAll();
