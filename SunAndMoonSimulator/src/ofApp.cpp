@@ -154,8 +154,8 @@ void ofApp::draw3dDisplay(){
         
         // calc sun position
         {
-            float az = sunpos.azimuth - PI;     // 0 - 360, looks like something wrong in ofxSunCalc, so
-            float alt = sunpos.altitude;        //
+            float az = sunpos.azimuth;
+            float alt = sunpos.altitude;
             
             vec3 sunPos1 = glm::rotate(north, az, -up);
             vec3 rotAxis = glm::rotate(east, az, -up);
@@ -204,8 +204,8 @@ void ofApp::draw3dDisplay(){
         
         // moon
         {
-            float az = moonpos.azimuth - PI;     // 0 - 360, looks like something wrong in ofxSunCalc, so
-            float alt = moonpos.altitude;        //
+            float az = moonpos.azimuth;
+            float alt = moonpos.altitude;
             
             vec3 moonPos1 = glm::rotate(north, az, -up);
             vec3 rotAxis = glm::rotate(east, az, -up);
