@@ -166,17 +166,13 @@ void ofApp::draw3dDisplay(){
             // ray
             sunRay.setDirection(glm::normalize(sunPos2));
 
-            int nMesh = room.roomObj.getNumMeshes();
-            for(int i=0; i<nMesh; i++){
-                glm::vec3 baricentricCoordinates;
-                glm::vec3 surfaceNormal;
+            glm::vec3 baricentricCoordinates;
+            glm::vec3 surfaceNormal;
 
-                const ofMesh & m = room.roomObj.getMesh(i);
-                bool bHit = (sunRay.intersectsMesh(m, baricentricCoordinates, surfaceNormal));
-                if(bHit){
-                    vec3 intersection = sunRay.getOrigin() + sunRay.getDirection() * baricentricCoordinates.z;
-                    room.addSunTrace(intersection);
-                }
+            bool bHit = (sunRay.intersectsPrimitive(room.box, baricentricCoordinates, surfaceNormal));
+            if(bHit){
+                vec3 intersection = sunRay.getOrigin() + sunRay.getDirection() * baricentricCoordinates.z;
+                room.addSunTrace(intersection);
             }
 
             // vbo
