@@ -29,7 +29,8 @@ public:
     void drawSky();
     void clearVbo();
     void keyPressed(int key);
-
+    void changeTrjDrawMode(int & mode);
+    
     // app param
     AppParam appPrm;
     
@@ -37,12 +38,14 @@ public:
     ofParameter<string> utcTimeSt{"UTC time", "n.a."};
     ofParameter<string> localTimeSt{"Local time", "n.a."};
     ofParameter<int> updateSpeed{"update speed (min)", 1, 0, 60*24*30};
-    ofParameterGroup timeGrp{"Time", utcTimeSt, localTimeSt, updateSpeed};
-
-    // Reset
-    ofParameter<void> btnClearTrj{"Clear trajectory"};
     ofParameter<void> btnResetTime{"Reset time to NOW"};
-    ofParameterGroup rstGrp{"Reset", btnClearTrj, btnResetTime};
+    ofParameterGroup timeGrp{"Time", utcTimeSt, localTimeSt, updateSpeed, btnResetTime};
+
+    // Trajectory
+    ofParameter<void> btnClearTrj{"Clear trajectory"};
+    ofParameter<int> trjDrawMode{"draw mode", 1, 0, 3};
+    ofParameterGroup trjGrp{"Trajectory", trjDrawMode, btnClearTrj};
+    
     ofxPanel gui;
     ofEasyCam cam;
     ofxAssimpModelLoader earthObj;

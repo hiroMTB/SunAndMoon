@@ -3,11 +3,12 @@
         "App": {
             "Alpha_Blending": "1",
             "Anti_Aliasing": "1",
+            "App_Version": "May 13 2019",
             "Background_Color": "0, 0, 0, 255",
             "Debug": "1",
             "Depth_Test": "1",
             "Target_FPS": "500",
-            "Vertical_Sync": "0"
+            "Vertical_Sync": "1"
         },
         "App_Settings": {
             "Alpha_Blending": "1",
@@ -17,6 +18,15 @@
             "Depth_Test": "1",
             "Target_FPS": "500",
             "Vertical_Sync": "1"
+        },
+        "City": {
+            "City": "Berlin",
+            "City_Id": "6279",
+            "Country": "Germany",
+            "Estimated_time_zone": "1",
+            "draw_city": "0",
+            "latitude": "52.52",
+            "longtitude": "13.4"
         },
         "Earth": {
             "City": {
@@ -42,9 +52,24 @@
             "export_sun_:_wall_trajectry": "1"
         },
         "Moon": {
+            "altitude": "-41.409",
+            "azimuth": "324.803",
+            "brightness": "0",
+            "dawn": "n.a.",
+            "draw": "1",
+            "draw_mode": "0",
+            "draw_mode_line": "1",
             "draw_moon": "1",
+            "dusk": "n.a.",
             "moon_brightness": "0",
-            "moon_position__vec_": "0.245626, -0.651515, 0.717771"
+            "moon_position__vec_": "0.245626, -0.651515, 0.717771",
+            "noon": "n.a.",
+            "radius": "1000",
+            "rise": "n.a.",
+            "set": "n.a."
+        },
+        "Reset": {
+            "draw_mode": "1"
         },
         "Room": {
             "depth__cm_": "900",
@@ -55,9 +80,19 @@
             "width__cm_": "750"
         },
         "Sun": {
-            "dawn": "04:53:57",
+            "altitude": "22.6763",
+            "azimuth": "275.809",
+            "brightness": "1",
+            "dawn": "03:10:07",
+            "draw": "1",
+            "draw_mode": "0",
+            "draw_mode_line": "1",
             "draw_sun": "1",
-            "dusk": "19:38:10",
+            "dusk": "20:59:48",
+            "noon": "11:04:58",
+            "radius": "1000",
+            "rise": "03:56:18",
+            "set": "20:13:37",
             "solar_noon": "03:16:03",
             "sun_altitude": "12.9048",
             "sun_azimuth": "-283.383",
@@ -67,11 +102,14 @@
             "sunset": "19:10:52"
         },
         "Time": {
-            "Local_time": "06:30:02",
-            "UTC_time": "21:30:02",
+            "Local_time": "17:24:22",
+            "UTC_time": "16:24:22",
             "date": "2019-05-12",
             "time": "15:10:51",
-            "update_speed__min_": "1"
+            "update_speed__min_": "5"
+        },
+        "Trajectory": {
+            "draw_mode": "1"
         },
         "app": {
             "draw_earth": "1",

@@ -3,11 +3,11 @@
 #include "Poco/DateTimeFormatter.h"
 #include "Poco/LocalDateTime.h"
 #include "Poco/Timespan.h"
+#include "Constants.h"
 
 void ofApp::setup(){
 
-    static const int version = 1.4;
-    ofSetWindowTitle("SunAndMoon Simulator v" + ofToString(version,1));
+    ofSetWindowTitle("SunAndMoonSimulator" );
 
     int sw = ofGetScreenWidth();
     int sh = ofGetScreenHeight();
@@ -20,6 +20,7 @@ void ofApp::setup(){
     
     // gui
     cbs.push(btnExport.newListener( [&](void){ exportTrj(); }));
+    cbs.push(trjDrawMode.newListener([&](int & mode){changeTrjDrawMode(mode);}));
     
     // reset
     cbs.push(btnClearTrj.newListener( [&](void){clearVbo(); }));
@@ -34,8 +35,8 @@ void ofApp::setup(){
     gui.add(sun.grp);
     gui.add(moon.grp);
     gui.add(room.grp);
+    gui.add(trjGrp);
     gui.add(expGrp);
-    gui.add(rstGrp);
     gui.loadFromFile(settingPath);
 
     room.change();
@@ -120,11 +121,6 @@ void ofApp::draw(){
 void ofApp::draw3dDisplay(){
 
     const float rad = 1000;
-    const vec3 up{0, 1, 0};
-    const vec3 north{0, 0, 1};
-    const vec3 east{-1, 0, 0};
-    const vec3 south{0, 0, -1};
-    const vec3 west{1, 0, 0};
     
     {
         cam.begin();
@@ -194,8 +190,8 @@ void ofApp::drawHeightDisplay(){
         ofPushMatrix();
         ofTranslate(x, y);  // move to left top of 2D viewport
     
-        float sunH = sun.sunPosVec.get().y;   // normalized value
-        float moonH = moon.posVec.get().y; // normalized value
+        float sunH = sun.pos.y;   // normalized value
+        float moonH = moon.pos.y;           // normalized value
 
         {
             // sun height line
@@ -268,6 +264,30 @@ void ofApp::clearVbo(){
     room.clear();
 }
 
+void ofApp::changeTrjDrawMode(int & i){
+
+    ofPrimitiveMode mode;
+    switch(i){
+        case 0:
+            mode = OF_PRIMITIVE_POINTS;
+            break;
+        case 1:
+            mode = OF_PRIMITIVE_LINE_STRIP;
+            break;
+        case 2:
+            mode = OF_PRIMITIVE_LINES;
+            break;
+        case 3:
+            mode = OF_PRIMITIVE_LINE_LOOP;
+            break;
+    }
+    
+    sun.trj.setMode(mode);
+    moon.trj.setMode(mode);
+    room.sunWallPath.setMode(mode);
+    room.moonWallPath.setMode(mode);
+}
+
 void ofApp::keyPressed(int key){
 
     switch(key){
@@ -305,7 +325,7 @@ void ofApp::keyPressed(int key){
             break;
 
         case 'r':
-            room.bDrawRoom = !room.bDrawRoom;
+            room.bDraw = !room.bDraw;
             break;
             
         case 'e':

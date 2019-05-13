@@ -36,6 +36,7 @@ namespace module{
             ofBackground(bg);
         }
         
+        ofParameter<string> appVersion{"App Version", __DATE__};
         ofParameter<bool> bStart{"Start", false, false};
         ofParameter<bool> bDebug{"Debug", true};
         ofParameter<int> targetFps{"Target FPS", 50, 0, 500};
@@ -46,7 +47,7 @@ namespace module{
         //ofParameter<bool> bSmoothing{"Smoothing", true};
         ofParameter<bool> bVerticalSync{"Vertical Sync", true};
         ofParameter<ofColor> bg{"Background Color", ofColor(0), ofColor(0), ofColor(255) };
-        ofParameterGroup grp{"App", bStart, bDebug, targetFps, fps, bAntiAliasing, bDepthTest, bAlphaBlending, /*bSmoothing,*/ bVerticalSync, bg};
+        ofParameterGroup grp{"App", appVersion, bStart, bDebug, targetFps, fps, bAntiAliasing, bDepthTest, bAlphaBlending, /*bSmoothing,*/ bVerticalSync, bg};
         
     };
 }

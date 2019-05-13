@@ -148,7 +148,7 @@ namespace sunandmoon{
             ofRotateYDeg(orientation.get().y);
             ofRotateZDeg(orientation.get().z);
             
-            if(bDrawRoom){
+            if(bDraw){
                 // room
                 ofSetColor(150);
                 roomVbo.draw();
@@ -178,13 +178,13 @@ namespace sunandmoon{
         ofVboMesh sunWallPath;
         ofVboMesh moonWallPath;
 
-        ofParameter<bool> bDrawRoom{"draw room", false};
+        ofParameter<bool> bDraw{"draw room", false};
         ofParameter<bool> bDrawCompass{"draw compass", false};
         ofParameter<float> width{"width (cm)", 750, 100, 1000};
         ofParameter<float> height{"height (cm)", 350, 100, 1000};
         ofParameter<float> depth{"depth (cm)", 900, 100, 1000};
         ofParameter<vec3>  orientation{"orientation", vec3(0), -vec3(180), vec3(180)};
-        ofParameterGroup grp{"Room", bDrawRoom, bDrawCompass, width, height, depth, orientation};
+        ofParameterGroup grp{"Room", bDraw, bDrawCompass, width, height, depth, orientation};
 
         vec3 sunOnTheWall;
         vec3 moonOnTheWall;

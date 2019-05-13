@@ -9,20 +9,17 @@ void exportTrj(){
         
         string filename = saveFileResult.filePath;
         
-        if(bExportSunSky){
+        if(sun.bDraw){
             sun.trj.save(filename + "_sun-sky.ply");
+            if(room.bDraw)
+                room.sunWallPath.save(filename + "_sun-wall.ply");
         }
         
-        if(bExportMoonSky){
+        if(moon.bDraw){
             moon.trj.save(filename + "_moon-sky.ply");
-        }
-        
-        if(bExportSunWall){
-            room.sunWallPath.save(filename + "_sun-wall.ply");
-        }
-        
-        if(bExportMoonWall){
-            room.moonWallPath.save(filename + "_moon-wall.ply");
+
+            if(room.bDraw)
+                room.moonWallPath.save(filename + "_moon-wall.ply");
         }
         
     }else{
@@ -31,9 +28,5 @@ void exportTrj(){
 }
 
 // export
-ofParameter<bool> bExportSunSky{"export sun : sky trajectry", true};
-ofParameter<bool> bExportMoonSky{"export moon : sky trajectry", true};
-ofParameter<bool> bExportSunWall{"export sun : wall trajectry", true};
-ofParameter<bool> bExportMoonWall{"export moon : wall trajectry", true};
 ofParameter<void> btnExport{"Start Export"};
-ofParameterGroup expGrp{"Export", bExportSunSky, bExportMoonSky, bExportSunWall, bExportMoonWall, btnExport};
+ofParameterGroup expGrp{"Export", btnExport};
