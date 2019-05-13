@@ -96,7 +96,7 @@ namespace sunandmoon{
         ofParameter<bool> bDrawSky{"draw sky", false};
         ofParameter<float> earthRadius{"Earth radius (cm)", 10000, 100, 6378136.6 * 100};
         ofParameter<bool> bDrawEarth{"draw earth", true};
-        ofParameterGroup grp{"Earth", bDrawEarth, bDrawSky, earthRadius, city.grp};
+        ofParameterGroup grp{"Earth", bDrawEarth, bDrawSky, earthRadius};
 
     };
 }

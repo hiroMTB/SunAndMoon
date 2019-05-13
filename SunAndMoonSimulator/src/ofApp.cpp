@@ -6,8 +6,8 @@
 
 void ofApp::setup(){
 
-    static const int version = 1;
-    ofSetWindowTitle("SunAndMoon Simulator v" + ofToString(version,0));
+    static const int version = 1.4;
+    ofSetWindowTitle("SunAndMoon Simulator v" + ofToString(version,1));
 
     int sw = ofGetScreenWidth();
     int sh = ofGetScreenHeight();
@@ -19,112 +19,118 @@ void ofApp::setup(){
     ofSetIcoSphereResolution(4);
     
     // gui
-    cbs.push(btnExport.newListener( [&](void){ exportTraj(); }));
+    cbs.push(btnExport.newListener( [&](void){ exportTrj(); }));
+    
+    // reset
+    cbs.push(btnClearTrj.newListener( [&](void){clearVbo(); }));
+    cbs.push(btnResetTime.newListener( [&](void){ utcDate = Poco::LocalDateTime().utc(); }));
     
     string settingPath = ofToDataPath("json/settings.json");
     gui.setup("settings", settingPath);
     gui.add(appPrm.grp);
     gui.add(timeGrp);
     gui.add(earth.grp);
-    gui.add(sunGrp);
-    gui.add(moonGrp);
+    gui.add(earth.city.grp);
+    gui.add(sun.grp);
+    gui.add(moon.grp);
     gui.add(room.grp);
     gui.add(expGrp);
+    gui.add(rstGrp);
     gui.loadFromFile(settingPath);
+
     room.change();
-    
     gui.minimizeAll();
 
     //cam.setFov(60);
     cam.setNearClip(100);
     cam.setFarClip(numeric_limits<float>::max()*0.001);
-
-    update();
-    
-    int w = ofGetScreenWidth();
-    timeline.allocate(w-20-100, 32);
-
-    // 3D earth
-    earthObj.loadModel("obj/earth.obj");
-    earthObj.setRotation(0, 180, 1, 0, 0);
-    earthObj.setRotation(1, 90, 0, 1, 0);
-    earthObj.setScale(1.06, 1.06, 1.06);
-
-    // ray
-    vec3 sunRayDirection = glm::vec3(0,1,0);
-    vec3 rayOrigin = glm::vec3(0, 0, 0);
-    sunRay.setup(rayOrigin, sunRayDirection);
-    moonRay.setup(rayOrigin, sunRayDirection);
-    
 }
 
 void ofApp::update(){
-    
-    if(appPrm.bStart) {
-        Poco::Timespan speed(0, 0, updateSpeed, 0, 0);
-        utcDate += speed;
-    }
+
+    updateTime();
     
     float lat = earth.city.lat;
     float lng = earth.city.lng;
-
-    sunpos = sun_calc.getSunPosition(utcDate, lat, lng);
-    
-    moonpos = sun_calc.getMoonPosition(utcDate, lat, lng);
-    sunpos.azimuth += PI;   // something wrong in ofxSunCalc
-    moonpos.azimuth += PI;   // something wrong in ofxSunCalc
-
-    todayInfo = sun_calc.getDayInfo(utcDate, lat, lng, false);
-
-    //
     int tz = earth.city.timezone = round(lng / 180.0 * 12.0);
-    Poco::Timespan dateOffset(0,tz,0,0,0);
-    todayInfo.sunrise.start += dateOffset;
-    todayInfo.sunrise.end += dateOffset;
-    todayInfo.sunset.start += dateOffset;
-    todayInfo.sunset.end += dateOffset;
-    todayInfo.dawn += dateOffset;
-    todayInfo.dusk += dateOffset;
-    
-    ofxSunCalc::drawSimpleDayInfoTimeline(timeline, todayInfo);
+    sun.update(utcDate, lat, lng, tz);
+    moon.update(utcDate, lat, lng, tz);
 
-    updateGui();
+    calcWallTrj();
+}
+
+void ofApp::updateTime(){
+    
+    int tz = earth.city.timezone;
+    Poco::Timespan offset(0,tz,0,0,0);
+    
+    Poco::Timespan speed(0, 0, updateSpeed, 0, 0);
+    if(appPrm.bStart) {
+        utcDate += speed;
+    }
+    localDate = utcDate + offset;
+    
+    // update string display
+    utcTimeSt = Poco::DateTimeFormatter::format(utcDate, "%H:%M:%S");
+    localTimeSt = Poco::DateTimeFormatter::format(localDate, "%H:%M:%S");
+}
+
+void ofApp::calcWallTrj(){
+    
+    {
+        // Sun and Room
+        glm::vec3 baricentricCoordinates;
+        glm::vec3 surfaceNormal;
+        
+        ofxraycaster::Ray & ray = sun.ray;
+        bool bHit = (ray.intersectsPrimitive(room.box, baricentricCoordinates, surfaceNormal));
+        if(bHit){
+            vec3 intersection = ray.getOrigin() + ray.getDirection() * baricentricCoordinates.z;
+            room.addSunTrace(intersection);
+        }
+    }
+    
+    {
+        // Moon and Room
+        ofxraycaster::Ray & ray = moon.ray;
+        glm::vec3 baricentricCoordinates;
+        glm::vec3 surfaceNormal;
+        bool bHit = (ray.intersectsPrimitive(room.box, baricentricCoordinates, surfaceNormal));
+        if(bHit){
+            vec3 intersection = ray.getOrigin() + ray.getDirection() * baricentricCoordinates.z;
+            room.addMoonTrace(intersection);
+        }
+    }
 }
 
 void ofApp::draw(){
     appPrm.set();
-    ofSetLineWidth(1);
+    earth.bDrawSky ? drawSky() : ofBackground(0,0,50);
     
-    earth.bDrawSky ? drawSky()
-                   : ofBackground(0,0,50);
-    
+    // 3d
     draw3dDisplay();
     
+    // 2d
     ofDisableDepthTest();
     drawBar();
     drawHeightDisplay();
-    
     gui.draw();
-    
 }
 
 void ofApp::draw3dDisplay(){
 
-    static const float rad = 1000;
-    static const float sunSize = 10;
-    static const float moonSize = 5;
-
-    static const vec3 up(0, 1, 0);
-    static const vec3 north(0, 0, 1);
-    static const vec3 east(-1, 0, 0);
-    static const vec3 south(0, 0, -1);
-    static const vec3 west( 1, 0, 0);
-
+    const float rad = 1000;
+    const vec3 up{0, 1, 0};
+    const vec3 north{0, 0, 1};
+    const vec3 east{-1, 0, 0};
+    const vec3 south{0, 0, -1};
+    const vec3 west{1, 0, 0};
+    
     {
         cam.begin();
         earth.draw();
         
-        vec3 origin = sunRay.getOrigin();
+        vec3 origin = sun.ray.getOrigin();
         
         ofDrawAxis(10);
         
@@ -152,98 +158,8 @@ void ofApp::draw3dDisplay(){
             ofPopMatrix();
         }
         
-        // calc sun position
-        {
-            float az = sunpos.azimuth;
-            float alt = sunpos.altitude;
-            
-            vec3 sunPos1 = glm::rotate(north, az, -up);
-            vec3 rotAxis = glm::rotate(east, az, -up);
-            vec3 sunPos2 = glm::rotate(sunPos1, alt, rotAxis);  // this is the position
-            vec3 sunPos3 = vec3(sunPos2.x, 0, sunPos2.z);       // this is projected position (z=0 plane)
-            sunPosVec = sunPos2;
-            
-            // ray
-            sunRay.setDirection(glm::normalize(sunPos2));
-
-            glm::vec3 baricentricCoordinates;
-            glm::vec3 surfaceNormal;
-
-            bool bHit = (sunRay.intersectsPrimitive(room.box, baricentricCoordinates, surfaceNormal));
-            if(bHit){
-                vec3 intersection = sunRay.getOrigin() + sunRay.getDirection() * baricentricCoordinates.z;
-                room.addSunTrace(intersection);
-            }
-
-            // vbo
-            sunPath.addVertex(sunPos2*rad + origin);
-
-            if(bDrawSun){
-
-                // guide lines
-                ofSetColor(200);
-                ofDrawLine(origin, sunPos1*rad+origin);
-                ofDrawLine(sunPos2*rad+origin, sunPos3*rad+origin);
-                
-                ofSetColor(250, 0, 0);
-                ofDrawLine(origin, sunPos2*rad+origin);
-
-                // sun on the sky
-                ofFill();
-                ofDrawSphere(sunPos2*rad + origin, sunSize);
-
-                // sun traj on the sky
-                ofSetColor(250, 0, 0);
-                sunPath.drawVertices();
-            }
-        }
-        
-        // moon
-        {
-            float az = moonpos.azimuth;
-            float alt = moonpos.altitude;
-            
-            vec3 moonPos1 = glm::rotate(north, az, -up);
-            vec3 rotAxis = glm::rotate(east, az, -up);
-            vec3 moonPos2 = glm::rotate(moonPos1, alt, rotAxis);  // this is the position
-            vec3 moonPos3 = vec3(moonPos2.x, 0, moonPos2.z);       // this is projected position (z=0 plane)
-            moonPosVec = moonPos2;
-            
-            
-            // ray
-            moonRay.setDirection(glm::normalize(moonPos2));
-            glm::vec3 baricentricCoordinates;
-            glm::vec3 surfaceNormal;
-            
-            bool bHit = (moonRay.intersectsPrimitive(room.box, baricentricCoordinates, surfaceNormal));
-            if(bHit){
-                vec3 intersection = moonRay.getOrigin() + moonRay.getDirection() * baricentricCoordinates.z;                
-                room.addMoonTrace(intersection);
-            }
-            
-            // vbo
-            moonPath.addVertex(moonPos2*rad+origin);
-
-            if(bDrawMoon){
-            
-                // guide lines
-                ofSetColor(200);
-                ofDrawLine(origin, moonPos1*rad+origin);
-                ofDrawLine(moonPos2*rad+origin, moonPos3*rad+origin);
-                
-                ofSetColor(250, 250, 0);
-                ofDrawLine(origin, moonPos2*rad+origin);
-                
-                // moon on the sky
-                ofFill();
-                ofDrawSphere(moonPos2*rad+origin, moonSize);
-                
-                // traj on the sky
-                ofSetColor(250, 250, 0);
-                moonPath.drawVertices();
-            }
-        }
-        
+        sun.draw();
+        moon.draw();
         room.draw();
 
         cam.end();
@@ -278,8 +194,8 @@ void ofApp::drawHeightDisplay(){
         ofPushMatrix();
         ofTranslate(x, y);  // move to left top of 2D viewport
     
-        float sunH = sunPosVec.get().y;   // normalized value
-        float moonH = moonPosVec.get().y; // normalized value
+        float sunH = sun.sunPosVec.get().y;   // normalized value
+        float moonH = moon.posVec.get().y; // normalized value
 
         {
             // sun height line
@@ -316,46 +232,16 @@ void ofApp::drawHeightDisplay(){
     ofPopView();
 }
 
-void ofApp::updateGui(){
-
-    dateSt = Poco::DateTimeFormatter::format(utcDate, "%Y-%m-%d");
-    utcTimeSt = Poco::DateTimeFormatter::format(utcDate, "%H:%M:%S");
-
-    int tz = earth.city.timezone;
-    Poco::Timespan dateOffset(0,tz,0,0,0);
-    localTimeSt = Poco::DateTimeFormatter::format(utcDate+dateOffset, "%H:%M:%S");
-
-    sun_altitude = sunpos.altitude * RAD_TO_DEG;
-    sun_azimuth  = sunpos.azimuth * RAD_TO_DEG;
-    sun_dawn = sun_calc.dateToTimeString(todayInfo.dawn);
-    sun_rise = sun_calc.dateToTimeString(todayInfo.sunrise.start);
-    sun_noon = sun_calc.dateToTimeString(todayInfo.transit);
-    sun_set = sun_calc.dateToTimeString(todayInfo.sunset.end);
-    sun_dusk = sun_calc.dateToTimeString(todayInfo.dusk);
-    
-}
-
 void ofApp::drawSky(){
 
-    sun_brightness = ofxSunCalc::getSunBrightness(todayInfo, utcDate);
-    
-    if(ofGetKeyPressed(OF_KEY_COMMAND)) {
-        sun_brightness = fabs(sin(ofGetElapsedTimef()*.1));
-    }
-    
-    // draw background gradient based on sun_brightness
-    
+    float brightness = sun.brightness;  
     ofColor nightBG(ofColor::black);
     ofColor nightFG(64);
-    
     ofColor dayBG(ofColor::skyBlue);
     ofColor dayFG(ofColor::paleGoldenRod);
-    
-    ofColor background = nightBG.lerp(dayBG, sun_brightness);
-    ofColor foreground = nightFG.lerp(dayFG, sun_brightness);
-    
+    ofColor background = nightBG.lerp(dayBG, brightness);
+    ofColor foreground = nightFG.lerp(dayFG, brightness);
     ofBackgroundGradient(foreground, background);
-    
 }
 
 void ofApp::drawBar(){
@@ -364,21 +250,21 @@ void ofApp::drawBar(){
     float ty = ofGetHeight() - 50;
 
     ofSetColor(255);
-    timeline.draw(tx, ty);
+    sun.timeline.draw(tx, ty);
     
     // Draw a current time mark
     int tz = earth.city.timezone;
-    float pixels_per_min = (timeline.getWidth() / 24) / 60.0;
+    float pixels_per_min = (sun.timeline.getWidth() / 24) / 60.0;
     float nx = tx + pixels_per_min * ((utcDate.hour()+tz) * 60 + utcDate.minute());
     ofSetColor(255, 0, 0);
     ofSetLineWidth(1.0);
-    ofDrawLine(nx, ty, nx, ty+timeline.getHeight());
-    ty += timeline.getHeight() + 25;
+    ofDrawLine(nx, ty, nx, ty+sun.timeline.getHeight());
+    ty += sun.timeline.getHeight() + 25;
 }
 
 void ofApp::clearVbo(){
-    sunPath.clear();
-    moonPath.clear();
+    sun.clear();
+    moon.clear();
     room.clear();
 }
 
@@ -430,35 +316,5 @@ void ofApp::keyPressed(int key){
             earth.city.bDrawCity = !earth.city.bDrawCity;
             break;
 
-    }
-}
-
-void ofApp::exportTraj(){
-    
-    string message = "Export .ply file, please select file prefix name";
-    string defaultFilename = "sm_";
-    ofFileDialogResult saveFileResult = ofSystemSaveDialog(defaultFilename, message);
-    if (saveFileResult.bSuccess){
-        
-        string filename = saveFileResult.filePath;
-        
-        if(bExportSunSky){
-            sunPath.save(filename + "_sun-sky.ply");
-        }
-        
-        if(bExportMoonSky){
-            moonPath.save(filename + "_moon-sky.ply");
-        }
-        
-        if(bExportSunWall){
-            room.sunWallPath.save(filename + "_sun-wall.ply");
-        }
-        
-        if(bExportMoonWall){
-            room.moonWallPath.save(filename + "_moon-wall.ply");
-        }
-        
-    }else{
-        cout << "error" << endl;
     }
 }
