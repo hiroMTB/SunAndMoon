@@ -21,7 +21,7 @@ namespace sunandmoon{
         
         Moon(){
             color = ofColor(250, 250, 0);
-            grp.setName("Moon");
+            grp.setName("Moon");            
         }
         
         void update(const Poco::DateTime & utcDate, const float lat, const float lng, int tz){

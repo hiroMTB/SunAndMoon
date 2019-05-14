@@ -35,11 +35,14 @@ void ofApp::setup(){
     gui.add(sun.grp);
     gui.add(moon.grp);
     gui.add(room.grp);
+    gui.add(window.grp);
     gui.add(trjGrp);
     gui.add(expGrp);
     gui.loadFromFile(settingPath);
 
     room.change();
+    window.plane.setParent(room.box);
+    
     gui.minimizeAll();
 
     //cam.setFov(60);
@@ -57,7 +60,7 @@ void ofApp::update(){
     sun.update(utcDate, lat, lng, tz);
     moon.update(utcDate, lat, lng, tz);
 
-    calcWallTrj();
+    calcIntersection();
 }
 
 void ofApp::updateTime(){
@@ -74,19 +77,22 @@ void ofApp::updateTime(){
     // update string display
     utcTimeSt = Poco::DateTimeFormatter::format(utcDate, "%H:%M:%S");
     localTimeSt = Poco::DateTimeFormatter::format(localDate, "%H:%M:%S");
+    
+    utcDateSt = Poco::DateTimeFormatter::format(utcDate, "%Y-%m-%d");
+    localDateSt = Poco::DateTimeFormatter::format(localDate, "%Y-%m-%d");
+
 }
 
-void ofApp::calcWallTrj(){
+void ofApp::calcIntersection(){
     
     {
         // Sun and Room
-        glm::vec3 baricentricCoordinates;
-        glm::vec3 surfaceNormal;
-        
+        glm::vec3 bari;
+        glm::vec3 normal;
         ofxraycaster::Ray & ray = sun.ray;
-        bool bHit = (ray.intersectsPrimitive(room.box, baricentricCoordinates, surfaceNormal));
+        bool bHit = (ray.intersectsPrimitive(room.box, bari, normal));
         if(bHit){
-            vec3 intersection = ray.getOrigin() + ray.getDirection() * baricentricCoordinates.z;
+            vec3 intersection = ray.getOrigin() + ray.getDirection() * bari.z;
             room.addSunTrace(intersection);
         }
     }
@@ -94,12 +100,95 @@ void ofApp::calcWallTrj(){
     {
         // Moon and Room
         ofxraycaster::Ray & ray = moon.ray;
-        glm::vec3 baricentricCoordinates;
-        glm::vec3 surfaceNormal;
-        bool bHit = (ray.intersectsPrimitive(room.box, baricentricCoordinates, surfaceNormal));
+        glm::vec3 bari;
+        glm::vec3 normal;
+        bool bHit = (ray.intersectsPrimitive(room.box, bari, normal));
         if(bHit){
-            vec3 intersection = ray.getOrigin() + ray.getDirection() * baricentricCoordinates.z;
+            vec3 intersection = ray.getOrigin() + ray.getDirection() * bari.z;
             room.addMoonTrace(intersection);
+        }
+    }
+    
+    {
+        float refLen = 100;
+        
+        // Sun ray come through a window
+        ofVboMesh & vbo = window.sunRayVbo;
+        vbo.clear();
+        
+        bool bSunIsHigh = (sun.pos.y > 0);
+        if(bSunIsHigh){
+            ofMesh & mesh = window.plane.getMesh();
+            vec3 dir = -sun.ray.getDirection();
+            for(int r=0; r<window.nRow+1; r++){
+                for(int c=0; c<window.nCol+1; c++){
+                    int index = c + window.nCol * r;
+                    const vec3 & v = mesh.getVertex(index);
+                    Ray & ray = window.sunRays[index];
+                    ray.setOrigin( window.pos.get() + v + dir );
+                    ray.setDirection(dir);
+                    glm::vec3 bari;
+                    glm::vec3 normal;
+                    bool bHit = (ray.intersectsPrimitive(room.box, bari, normal));
+                    if(bHit){
+                        vec3 intersection = ray.getOrigin() + ray.getDirection() * bari.z;
+                        vbo.addVertex(ray.getOrigin());
+                        vbo.addVertex(intersection);
+                        
+                        // reflection
+                        vec3 refDir = glm::reflect(ray.getDirection(), normal);
+                        vbo.addVertex(intersection);
+                        vbo.addVertex(intersection + refDir * refLen);
+                        
+                        ofColor col(250, 0, 0, 100);
+                        vbo.addColor(col);
+                        vbo.addColor(col);
+                        vbo.addColor(col);
+                        vbo.addColor(col);
+                    }
+                }
+            }
+        }
+    }
+    
+    {
+        float refLen = 100;
+        ofVboMesh & vbo = window.moonRayVbo;
+        vbo.clear();
+
+        // Moon ray come through a window
+        bool bMoonIsHigh = (moon.pos.y > 0);
+        if(bMoonIsHigh){
+            ofMesh & mesh = window.plane.getMesh();
+            vec3 dir = -moon.ray.getDirection();
+            for(int r=0; r<window.nRow+1; r++){
+                for(int c=0; c<window.nCol+1; c++){
+                    int index = c + window.nCol * r;
+                    const vec3 & v = mesh.getVertex(index);
+                    Ray & ray = window.moonRays[index];
+                    ray.setOrigin( window.pos.get() + v + dir );
+                    ray.setDirection(dir);
+                    glm::vec3 bari;
+                    glm::vec3 normal;
+                    bool bHit = (ray.intersectsPrimitive(room.box, bari, normal));
+                    if(bHit){
+                        vec3 intersection = ray.getOrigin() + ray.getDirection() * bari.z;
+                        vbo.addVertex(ray.getOrigin());
+                        vbo.addVertex(intersection);
+                        
+                        // reflection
+                        vec3 refDir = glm::reflect(ray.getDirection(), normal);
+                        vbo.addVertex(intersection);
+                        vbo.addVertex(intersection + refDir * refLen);
+                        
+                        ofColor col(250, 250, 0, 100);
+                        vbo.addColor(col);
+                        vbo.addColor(col);
+                        vbo.addColor(col);
+                        vbo.addColor(col);
+                    }
+                }
+            }
         }
     }
 }
@@ -157,6 +246,7 @@ void ofApp::draw3dDisplay(){
         sun.draw();
         moon.draw();
         room.draw();
+        window.draw();
 
         cam.end();
     }

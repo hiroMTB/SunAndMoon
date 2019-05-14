@@ -81,7 +81,7 @@ namespace sunandmoon{
         
         vec3 pos;   // 3d
         vec3 dir;   // 2d
-        const float size{10};
+        const float size{15};
 
         ofxraycaster::Ray ray;
         ofVboMesh trj;

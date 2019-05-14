@@ -9,6 +9,7 @@
 #include "Earth.h"
 #include "City.h"
 #include "Room.h"
+#include "Window.h"
 #include "AppParam.h"
 
 using namespace glm;
@@ -21,7 +22,7 @@ public:
     void setup();
     void update();
     void updateTime();
-    void calcWallTrj();
+    void calcIntersection();
     void draw();
     void draw3dDisplay();
     void drawHeightDisplay();
@@ -35,11 +36,13 @@ public:
     AppParam appPrm;
     
     // time
+    ofParameter<string> utcDateSt{"UTC date", "n.a."};
     ofParameter<string> utcTimeSt{"UTC time", "n.a."};
-    ofParameter<string> localTimeSt{"Local time", "n.a."};
+    ofParameter<string> localDateSt{"Local date", "n.a."};
+    ofParameter<string> localTimeSt{"Local time", "n.a."};    
     ofParameter<int> updateSpeed{"update speed (min)", 1, 0, 60*24*30};
     ofParameter<void> btnResetTime{"Reset time to NOW"};
-    ofParameterGroup timeGrp{"Time", utcTimeSt, localTimeSt, updateSpeed, btnResetTime};
+    ofParameterGroup timeGrp{"Time", localDateSt, utcTimeSt, localDateSt, localTimeSt, updateSpeed, btnResetTime};
 
     // Trajectory
     ofParameter<void> btnClearTrj{"Clear trajectory"};
@@ -59,6 +62,8 @@ public:
     Moon moon;
 
     ofEventListeners cbs;
+
+    Window window;
     
     #include "Exporter.h"
 };

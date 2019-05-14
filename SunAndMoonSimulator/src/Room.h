@@ -40,7 +40,8 @@ namespace sunandmoon{
             // box
             box.set(width, height, depth, 1, 1, 1);
             box.setPosition(0, 0, 0);
-
+            box.setOrientation(orientation);
+            
             // construct room with lines since ofBox, ofPlane shows diagonal line
             {
                 roomVbo.clear();
@@ -120,59 +121,79 @@ namespace sunandmoon{
                 }
             }
             
-            // floor
-            floor.set(width, depth, width/20, depth/20);
-            floor.setPosition(0, -height/2, 0);
-            floor.setOrientation(vec3(-90, 0, 0));
-            floor.setUseVbo(true);
-
             // human
             humanObj.setPosition(0, -height/2, 0);
             humanObj.setRotation(0, 180, 1, 0, 0);
+
         }
 
         void addSunTrace(const vec3 & v){
-            sunWallPath.addVertex(v);
-            sunOnTheWall = v;
+            vec3 vLocal = ceonvertToRoomCoordinate(v);
+            sunWallPath.addVertex( vLocal );
+            sunOnTheWall = vLocal;
         }
 
         void addMoonTrace(const vec3 & v){
-            moonWallPath.addVertex(v);
-            moonOnTheWall = v;
+            vec3 vLocal = ceonvertToRoomCoordinate(v);
+            moonWallPath.addVertex( vLocal );
+            moonOnTheWall = vLocal;
         }
 
+        vec3 ceonvertToRoomCoordinate(const vec3 & v){
+            //mat4 m = box.getGlobalTransformMatrix();
+            mat4 m = box.getLocalTransformMatrix();
+            mat4 inv = glm::inverse(m);
+            vec4 v4 = vec4(v, 1);
+            vec4 r4 = inv * v4;
+            return vec3(r4.x, r4.y, r4.z);
+        }
+        
         void draw(){
             
             ofPushMatrix();
-            ofRotateXDeg(orientation.get().x);
-            ofRotateYDeg(orientation.get().y);
-            ofRotateZDeg(orientation.get().z);
             
             if(bDraw){
-                // room
+                // room                
+                {
+                    ofPushMatrix();
+                    ofRotateXDeg(orientation.get().x);
+                    ofRotateZDeg(orientation.get().z);
+                    ofRotateYDeg(orientation.get().y);
+                    
+                    // room
+                    ofSetColor(150);
+                    roomVbo.draw();
+          
+                    // sun trj
+                    ofSetColor(255, 0, 0);
+                    ofDrawSphere(sunOnTheWall, 3);
+                    sunWallPath.drawVertices();
+                    
+                    // moon trj
+                    ofSetColor(255, 250, 0);
+                    ofDrawSphere(moonOnTheWall, 3);
+                    moonWallPath.drawVertices();
+                    
+                    ofPopMatrix();
+                }
+                
                 ofSetColor(150);
-                roomVbo.draw();
-
-                // sun
-                ofSetColor(255, 0, 0);
-                ofDrawSphere(sunOnTheWall, 3);
-                sunWallPath.drawVertices();          
-
-                // moon
-                ofSetColor(255, 250, 0);
-                ofDrawSphere(moonOnTheWall, 3);                
-                moonWallPath.drawVertices();
+                box.drawWireframe();
             }
             
             // human
+            ofPushMatrix();
+            ofRotateXDeg(orientation.get().x);
+            ofRotateZDeg(orientation.get().z);
+            ofRotateYDeg(orientation.get().y);
             ofSetColor(150);
             humanObj.drawWireframe();
+            ofPopMatrix();
 
             ofPopMatrix();
         }
 
         ofBoxPrimitive box;
-        ofPlanePrimitive floor;
         
         ofVboMesh roomVbo;
         ofVboMesh sunWallPath;
