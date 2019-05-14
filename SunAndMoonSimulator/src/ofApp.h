@@ -42,7 +42,7 @@ public:
     ofParameter<string> localTimeSt{"Local time", "n.a."};    
     ofParameter<int> updateSpeed{"update speed (min)", 1, 0, 60*24*30};
     ofParameter<void> btnResetTime{"Reset time to NOW"};
-    ofParameterGroup timeGrp{"Time", localDateSt, utcTimeSt, localDateSt, localTimeSt, updateSpeed, btnResetTime};
+    ofParameterGroup timeGrp{"Time", utcDateSt, utcTimeSt, localDateSt, localTimeSt, updateSpeed, btnResetTime};
 
     // Trajectory
     ofParameter<void> btnClearTrj{"Clear trajectory"};
