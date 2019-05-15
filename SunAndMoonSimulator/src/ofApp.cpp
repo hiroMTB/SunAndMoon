@@ -6,9 +6,9 @@
 #include "Constants.h"
 
 void ofApp::setup(){
-
+    
     ofSetWindowTitle("SunAndMoonSimulator" );
-
+    
     int sw = ofGetScreenWidth();
     int sh = ofGetScreenHeight();
     
@@ -39,19 +39,19 @@ void ofApp::setup(){
     gui.add(trjGrp);
     gui.add(expGrp);
     gui.loadFromFile(settingPath);
-
+    gui.minimizeAll();
+    
     room.change();
     window.plane.setParent(room.box);
+    window.reset();
     
-    gui.minimizeAll();
-
     //cam.setFov(60);
     cam.setNearClip(100);
     cam.setFarClip(numeric_limits<float>::max()*0.001);
 }
 
 void ofApp::update(){
-
+    
     updateTime();
     
     float lat = earth.city.lat;
@@ -59,8 +59,10 @@ void ofApp::update(){
     int tz = earth.city.timezone = round(lng / 180.0 * 12.0);
     sun.update(utcDate, lat, lng, tz);
     moon.update(utcDate, lat, lng, tz);
-
+    
     calcIntersection();
+    calcIntersectionWindowRay(window.moonRayVbo, window.moonRays, -moon.ray.getDirection(), moon.pos.y, ofColor(250, 250, 0, 100));
+    calcIntersectionWindowRay(window.sunRayVbo, window.sunRays, -sun.ray.getDirection(), sun.pos.y, ofColor(250, 0, 0, 10, 0));
 }
 
 void ofApp::updateTime(){
@@ -80,7 +82,7 @@ void ofApp::updateTime(){
     
     utcDateSt = Poco::DateTimeFormatter::format(utcDate, "%Y-%m-%d");
     localDateSt = Poco::DateTimeFormatter::format(localDate, "%Y-%m-%d");
-
+    
 }
 
 void ofApp::calcIntersection(){
@@ -108,84 +110,73 @@ void ofApp::calcIntersection(){
             room.addMoonTrace(intersection);
         }
     }
+}
+
+void ofApp::calcIntersectionWindowRay( ofVboMesh & vbo, vector<Ray> & rays, vec3 dir, float planetHeight,
+                                      ofColor col){
     
-    {
-        float refLen = 100;
-        
-        // Sun ray come through a window
-        ofVboMesh & vbo = window.sunRayVbo;
-        vbo.clear();
-        
-        bool bSunIsHigh = (sun.pos.y > 0);
-        if(bSunIsHigh){
-            ofMesh & mesh = window.plane.getMesh();
-            vec3 dir = -sun.ray.getDirection();
-            for(int r=0; r<window.nRow+1; r++){
-                for(int c=0; c<window.nCol+1; c++){
-                    int index = c + window.nCol * r;
-                    const vec3 & v = mesh.getVertex(index);
-                    Ray & ray = window.sunRays[index];
-                    ray.setOrigin( window.pos.get() + v + dir );
-                    ray.setDirection(dir);
-                    glm::vec3 bari;
-                    glm::vec3 normal;
-                    bool bHit = (ray.intersectsPrimitive(room.box, bari, normal));
-                    if(bHit){
-                        vec3 intersection = ray.getOrigin() + ray.getDirection() * bari.z;
-                        vbo.addVertex(ray.getOrigin());
-                        vbo.addVertex(intersection);
-                        
-                        // reflection
-                        vec3 refDir = glm::reflect(ray.getDirection(), normal);
-                        vbo.addVertex(intersection);
-                        vbo.addVertex(intersection + refDir * refLen);
-                        
-                        ofColor col(250, 0, 0, 100);
-                        vbo.addColor(col);
-                        vbo.addColor(col);
-                        vbo.addColor(col);
-                        vbo.addColor(col);
-                    }
+    float refLen = 100;
+    
+    int nV = vbo.getVertices().size();
+    int nRay = window.nRow * window.nCol;
+    if(nV !=  nRay*4){
+        ofLogError() << "Something is wrong here";
+        ofLogError() << "vbo size = " << nV;
+        ofLogError() << "nCol = " << window.nCol;
+        ofLogError() << "nRow = " << window.nRow;
+        ofLogError() << "nRay = " << nRay;
+        return;
+    }
+    
+    bool bPlanetIsHigh = (planetHeight > 0);
+    if(!bPlanetIsHigh){
+        for(int r=0; r<window.nRow; r++){
+            for(int c=0; c<window.nCol; c++){
+                int index = c + window.nCol * r;
+                int vboIndex = index * 4;
+                for(int i=0; i<4; i++){
+                    vbo.setVertex(vboIndex+i, vec3(0));
+                    vbo.setColor(vboIndex+i, ofColor(0,0,0,0));
                 }
             }
         }
-    }
-    
-    {
-        float refLen = 100;
-        ofVboMesh & vbo = window.moonRayVbo;
-        vbo.clear();
-
-        // Moon ray come through a window
-        bool bMoonIsHigh = (moon.pos.y > 0);
-        if(bMoonIsHigh){
-            ofMesh & mesh = window.plane.getMesh();
-            vec3 dir = -moon.ray.getDirection();
-            for(int r=0; r<window.nRow+1; r++){
-                for(int c=0; c<window.nCol+1; c++){
-                    int index = c + window.nCol * r;
-                    const vec3 & v = mesh.getVertex(index);
-                    Ray & ray = window.moonRays[index];
-                    ray.setOrigin( window.pos.get() + v + dir );
-                    ray.setDirection(dir);
-                    glm::vec3 bari;
-                    glm::vec3 normal;
-                    bool bHit = (ray.intersectsPrimitive(room.box, bari, normal));
-                    if(bHit){
-                        vec3 intersection = ray.getOrigin() + ray.getDirection() * bari.z;
-                        vbo.addVertex(ray.getOrigin());
-                        vbo.addVertex(intersection);
-                        
-                        // reflection
-                        vec3 refDir = glm::reflect(ray.getDirection(), normal);
-                        vbo.addVertex(intersection);
-                        vbo.addVertex(intersection + refDir * refLen);
-                        
-                        ofColor col(250, 250, 0, 100);
-                        vbo.addColor(col);
-                        vbo.addColor(col);
-                        vbo.addColor(col);
-                        vbo.addColor(col);
+    }else{
+        ofMesh & mesh = window.plane.getMesh();
+        
+        for(int r=0; r<window.nRow; r++){
+            for(int c=0; c<window.nCol; c++){
+                int index = c + window.nCol * r;
+                const vec3 & v = mesh.getVertex(index);
+                Ray & ray = window.moonRays[index];
+                vec3 origin = window.pos.get() + v + dir;
+                ray.setOrigin(origin);
+                ray.setDirection(dir);
+                glm::vec3 bari;
+                glm::vec3 normal;
+                bool bHit = (ray.intersectsPrimitive(room.box, bari, normal));
+                int vboIndex = index * 4;
+                if(bHit){
+                    vec3 intersection = origin + dir * bari.z;
+                    vbo.setVertex(vboIndex+0, origin);
+                    vbo.setVertex(vboIndex+1, intersection);
+                    
+                    //reflection
+                    vec3 refDir = glm::reflect(dir, normal);
+                    vbo.setVertex(vboIndex+2, intersection);
+                    vbo.setVertex(vboIndex+3, intersection + refDir * refLen);
+      
+                    vbo.setColor(vboIndex+0, col);
+                    vbo.setColor(vboIndex+1, col);
+                    vbo.setColor(vboIndex+2, col);
+                    vbo.setColor(vboIndex+3, col);
+                }else{
+                    vbo.setVertex(vboIndex+0, origin);
+                    vbo.setVertex(vboIndex+1, origin + dir * 10);
+                    vbo.setVertex(vboIndex+2, origin);  // no reflection, ignore
+                    vbo.setVertex(vboIndex+3, origin);  // no reflection, ignore
+                    
+                    for(int i=0; i<4; i++){
+                        vbo.setColor(vboIndex+i, ofColor(0));
                     }
                 }
             }
@@ -208,7 +199,7 @@ void ofApp::draw(){
 }
 
 void ofApp::draw3dDisplay(){
-
+    
     const float rad = 1000;
     
     {
@@ -219,7 +210,7 @@ void ofApp::draw3dDisplay(){
         
         ofDrawAxis(10);
         
-        if(room.bDrawCompass){            
+        if(room.bDrawCompass){
             ofPushMatrix();
             ofTranslate(origin);
             
@@ -239,7 +230,7 @@ void ofApp::draw3dDisplay(){
             ofDrawBitmapString("E", east*rad);
             ofDrawBitmapString("S", south*rad);
             ofDrawBitmapString("W", west*rad);
-        
+            
             ofPopMatrix();
         }
         
@@ -247,7 +238,7 @@ void ofApp::draw3dDisplay(){
         moon.draw();
         room.draw();
         window.draw();
-
+        
         cam.end();
     }
 }
@@ -270,7 +261,7 @@ void ofApp::drawHeightDisplay(){
         ofSetLineWidth(1);
         ofSetColor(200);
         ofDrawRectangle(v);
-
+        
         ofFill();
         ofSetColor(0);
         ofDrawRectangle(v);
@@ -279,10 +270,10 @@ void ofApp::drawHeightDisplay(){
     {
         ofPushMatrix();
         ofTranslate(x, y);  // move to left top of 2D viewport
-    
+        
         float sunH = sun.pos.y;   // normalized value
         float moonH = moon.pos.y;           // normalized value
-
+        
         {
             // sun height line
             ofPushMatrix();
@@ -292,7 +283,7 @@ void ofApp::drawHeightDisplay(){
             ofDrawCircle(0, -sunH*h/2, 3);
             ofPopMatrix();
         }
-    
+        
         {
             // moon height line
             ofPushMatrix();
@@ -302,7 +293,7 @@ void ofApp::drawHeightDisplay(){
             ofDrawCircle(0, -moonH*h/2, 3);
             ofPopMatrix();
         }
-    
+        
         {
             // white zero line
             ofPushMatrix();
@@ -311,7 +302,7 @@ void ofApp::drawHeightDisplay(){
             ofDrawLine(-w/2, 0, w/2, 0);
             ofPopMatrix();
         }
-    
+        
         ofPopMatrix();
     }
     
@@ -319,8 +310,8 @@ void ofApp::drawHeightDisplay(){
 }
 
 void ofApp::drawSky(){
-
-    float brightness = sun.brightness;  
+    
+    float brightness = sun.brightness;
     ofColor nightBG(ofColor::black);
     ofColor nightFG(64);
     ofColor dayBG(ofColor::skyBlue);
@@ -334,7 +325,7 @@ void ofApp::drawBar(){
     
     float tx = 20;
     float ty = ofGetHeight() - 50;
-
+    
     ofSetColor(255);
     sun.timeline.draw(tx, ty);
     
@@ -355,7 +346,7 @@ void ofApp::clearVbo(){
 }
 
 void ofApp::changeTrjDrawMode(int & i){
-
+    
     ofPrimitiveMode mode;
     switch(i){
         case 0:
@@ -379,7 +370,7 @@ void ofApp::changeTrjDrawMode(int & i){
 }
 
 void ofApp::keyPressed(int key){
-
+    
     switch(key){
             
         case ' ':
@@ -393,7 +384,7 @@ void ofApp::keyPressed(int key){
                 utcDate += Poco::Timespan(1,0,0,0,0);
             }
             break;
-    
+            
         case OF_KEY_LEFT:
             if(ofGetKeyPressed(OF_KEY_SHIFT)){
                 earth.city.goToPrevCity();
@@ -409,11 +400,11 @@ void ofApp::keyPressed(int key){
         case OF_KEY_DOWN:
             utcDate -= Poco::Timespan(30,0,0,0,0);
             break;
-
+            
         case 'c':
             clearVbo();
             break;
-
+            
         case 'r':
             room.bDraw = !room.bDraw;
             break;
@@ -425,6 +416,6 @@ void ofApp::keyPressed(int key){
         case 'C':
             earth.city.bDrawCity = !earth.city.bDrawCity;
             break;
-
+            
     }
 }

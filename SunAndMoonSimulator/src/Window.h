@@ -17,38 +17,64 @@ namespace sunandmoon{
     public:
         
         Window(){
-            sunRayVbo.setMode(OF_PRIMITIVE_LINES);
-            moonRayVbo.setMode(OF_PRIMITIVE_LINES);
-            
-            cbs.push( nCol.newListener([&](int & i){ resetRay();} ) );
-            cbs.push( nRow.newListener([&](int & i){ resetRay();} ) );
-            cbs.push( width.newListener([&](int & i){ resetPlane();} ) );
-            cbs.push( height.newListener([&](int & i){ resetPlane();} ) );
-            cbs.push( pos.newListener([&](vec3 & v){ resetPlane();} ) );
-            cbs.push( orientation.newListener([&](vec3 & v){ resetPlane();} ) );                        
+            ofLogNotice() << "Window constructed";
+
+            cbs.push( nCol.newListener([=](int &){ this->requestReset();} ) );
+            cbs.push( nRow.newListener([=](int &){ this->requestReset();} ) );
+            cbs.push( width.newListener([=](int &){ this->requestReset();} ) );
+            cbs.push( height.newListener([=](int &){ this->requestReset();} ) );
+            cbs.push( pos.newListener([=](vec3 &){ this->requestReset();} ) );
+            cbs.push( orientation.newListener([=](vec3 & v){ this->requestReset();} ) );
         }
 
         ~Window(){
+            ofLogNotice() << "Window destucted";
             clear();
         }
         
-        void resetPlane(){
+        void requestReset(){
+            bNeedReset = true;
+        }
+        
+        void reset(){
+            clear();
+
+            plane.disableNormals();
             plane.set(width, height, nCol, nRow);
             plane.setPosition(pos);
             plane.setOrientation(orientation);
-        }
-        
-        void resetRay(){
-           
-            clear();
-            resetPlane();
             
             int nRay = nCol * nRow;
             sunRays.resize(nRay);
-            moonRays.resize(nRay); 
+            moonRays.resize(nRay);
+            
+            // vbo
+            sunRayVbo.setMode(OF_PRIMITIVE_LINES);
+            moonRayVbo.setMode(OF_PRIMITIVE_LINES);
+            sunRayVbo.clear();
+            sunRayVbo.getVertices().resize(nRay*4);
+            sunRayVbo.getColors().resize(nRay*4);
+            
+            moonRayVbo.clear();
+            moonRayVbo.getVertices().resize(nRay*4);
+            moonRayVbo.getColors().resize(nRay*4);
+            
+            bNeedReset = false;
+            
+            ofLogNotice() << "Window object reset";
+            ofLogNotice() << "nCol = " << nCol;
+            ofLogNotice() << "nRow = " << nRow;
+            ofLogNotice() << "SunRays size = " << sunRays.size();
+            ofLogNotice() << "sunVbo  size = " << sunRayVbo.getVertices().size() << endl;
         }
         
         void draw(){
+            
+            if(bNeedReset){
+                reset();
+                ofLogVerbose() << "reset" << endl;
+            }
+            
             plane.drawWireframe();
             
             ofSetColor(255, 0, 0);
@@ -72,12 +98,18 @@ namespace sunandmoon{
         ofParameterGroup grp{"Window", pos, orientation, width, height, nCol, nRow};
         
         ofPlanePrimitive plane;
-        vector<shared_ptr<Ray>> sunRays;
-        vector<shared_ptr<Ray>> moonRays;
+        vector<Ray> sunRays;
+        vector<Ray> moonRays;
 
         ofVboMesh sunRayVbo;
         ofVboMesh moonRayVbo;
 
         ofEventListeners cbs;
+
+    private:
+        
+        bool bNeedReset = true;
+
+        
     };
 }
