@@ -23,7 +23,7 @@ public:
     void update();
     void updateTime();
     void calcIntersection();
-    void calcIntersectionWindowRay( ofVboMesh & vbo, vector<Ray> & rays, vec3 dir, float planetHeight, ofColor col);
+    void calcIntersectionWindowRay( vector<Ray> & rays, vec3 dir, float planetHeight, ofColor col);
     void draw();
     void draw3dDisplay();
     void drawHeightDisplay();

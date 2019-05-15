@@ -52,8 +52,8 @@
             "export_sun_:_wall_trajectry": "1"
         },
         "Moon": {
-            "altitude": "23.6745",
-            "azimuth": "198.024",
+            "altitude": "-3.14566",
+            "azimuth": "83.1307",
             "brightness": "0",
             "dawn": "n.a.",
             "draw": "1",
@@ -80,19 +80,19 @@
             "width__cm_": "750"
         },
         "Sun": {
-            "altitude": "-17.7481",
-            "azimuth": "8.31938",
+            "altitude": "-10.7371",
+            "azimuth": "30.1804",
             "brightness": "0",
-            "dawn": "03:24:05",
+            "dawn": "03:06:16",
             "draw": "1",
             "draw_mode": "0",
             "draw_mode_line": "1",
             "draw_sun": "1",
-            "dusk": "20:44:21",
-            "noon": "11:04:13",
+            "dusk": "21:04:25",
+            "noon": "11:05:20",
             "radius": "1000",
-            "rise": "04:07:49",
-            "set": "20:00:37",
+            "rise": "03:53:13",
+            "set": "20:17:27",
             "solar_noon": "03:16:03",
             "sun_altitude": "12.9048",
             "sun_azimuth": "-283.383",
@@ -102,8 +102,10 @@
             "sunset": "19:10:52"
         },
         "Time": {
-            "Local_time": "00:36:55",
-            "UTC_time": "23:36:55",
+            "Local_date": "2019-05-30",
+            "Local_time": "02:12:44",
+            "UTC_date": "2019-05-30",
+            "UTC_time": "01:12:44",
             "date": "2019-05-12",
             "time": "15:10:51",
             "update_speed__min_": "5"
@@ -114,9 +116,10 @@
         "Window": {
             "Height": "150",
             "Number_of_RAy_row": "15",
-            "Number_of_Ray_colum": "30",
-            "Number_of_Ray_row": "15",
+            "Number_of_Ray_colum": "15",
+            "Number_of_Ray_row": "10",
             "Width": "300",
+            "draw_window": "1",
             "orientation": "0, 0, 0",
             "position": "75, 25, -450"
         },

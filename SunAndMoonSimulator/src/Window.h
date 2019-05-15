@@ -19,12 +19,13 @@ namespace sunandmoon{
         Window(){
             ofLogNotice() << "Window constructed";
 
-            cbs.push( nCol.newListener([=](int &){ this->requestReset();} ) );
-            cbs.push( nRow.newListener([=](int &){ this->requestReset();} ) );
-            cbs.push( width.newListener([=](int &){ this->requestReset();} ) );
-            cbs.push( height.newListener([=](int &){ this->requestReset();} ) );
-            cbs.push( pos.newListener([=](vec3 &){ this->requestReset();} ) );
-            cbs.push( orientation.newListener([=](vec3 & v){ this->requestReset();} ) );
+            cbs.push( nCol.newListener([=](int &){ this->reset();} ) );
+            cbs.push( nRow.newListener([=](int &){ this->reset();} ) );
+            
+            cbs.push( width.newListener([=](int &){ this->resetPlane();} ) );
+            cbs.push( height.newListener([=](int &){ this->resetPlane();} ) );
+            cbs.push( pos.newListener([=](vec3 &){ this->resetPlane();} ) );
+            cbs.push( orientation.newListener([=](vec3 & v){ this->resetPlane();} ) );
         }
 
         ~Window(){
@@ -32,95 +33,70 @@ namespace sunandmoon{
             clear();
         }
         
-        void requestReset(){
-            bNeedReset = true;
-        }
-        
         void reset(){
             clear();
-
-            plane.disableNormals();
+            resetPlane();
+            resetRay();
+        }
+        
+        void resetPlane(){
             plane.set(width, height, nCol, nRow);
             plane.setPosition(pos);
             plane.setOrientation(orientation);
-            
+        }
+        
+        void resetRay(){
+            clear();
             int nRay = nCol * nRow;
             sunRays.resize(nRay);
             moonRays.resize(nRay);
-            
-            // vbo
-            sunRayVbo.setMode(OF_PRIMITIVE_LINES);
-            moonRayVbo.setMode(OF_PRIMITIVE_LINES);
-            sunRayVbo.clear();
-            sunRayVbo.getVertices().resize(nRay*4);
-            sunRayVbo.getColors().resize(nRay*4);
-            
-            moonRayVbo.clear();
-            moonRayVbo.getVertices().resize(nRay*4);
-            moonRayVbo.getColors().resize(nRay*4);
-            
             bNeedReset = false;
             
             ofLogNotice() << "Window object reset";
             ofLogNotice() << "nCol = " << nCol;
             ofLogNotice() << "nRow = " << nRow;
             ofLogNotice() << "SunRays size = " << sunRays.size();
-            ofLogNotice() << "sunVbo  size = " << sunRayVbo.getVertices().size() << endl;
         }
         
         void draw(){
-            
-            if(bNeedReset){
-                reset();
-                ofLogVerbose() << "reset" << endl;
+            if(bDraw){
+                ofSetColor(200);
+                plane.drawWireframe();
+
+                ofSetColor(250, 0, 0);
+                for(auto & r : sunRays){
+                    r.getTrack().draw();
+                }
+
+                ofSetColor(250, 250, 0);
+                for(auto & r : moonRays){
+                    r.getTrack().draw();
+                }
             }
-
-            ofSetColor(200);
-            plane.drawWireframe();
-            
-            //sunRayVbo.draw();
-            //moonRayVbo.draw();
-
-            ofSetColor(250, 0, 0);
-            for(auto & r : sunRays){
-                r.getTrack().draw();
-            }
-
-            ofSetColor(250, 250, 0);
-            for(auto & r : moonRays){
-                r.getTrack().draw();
-            }
-
         }
         
         void clear(){
-            sunRayVbo.clear();
-            moonRayVbo.clear();
             sunRays.clear();
             moonRays.clear();
         }
         
+        ofParameter<bool> bDraw{"draw window", true};
         ofParameter<vec3> pos{"position", vec3(0), vec3(-5000), vec3(5000)};  // relative to room origin
         ofParameter<vec3> orientation{"orientation", vec3(0), vec3(-180), vec3(180)};
         ofParameter<int> width{"Width", 100, 10, 3000};
         ofParameter<int> height{"Height", 100, 10, 3000};
         ofParameter<int> nCol{"Number of Ray colum", 10, 1, 100};
         ofParameter<int> nRow{"Number of Ray row", 10, 1, 100};
-        ofParameterGroup grp{"Window", pos, orientation, width, height, nCol, nRow};
+        ofParameterGroup grp{"Window", bDraw, pos, orientation, width, height, nCol, nRow};
         
         ofPlanePrimitive plane;
         vector<Ray> sunRays;
         vector<Ray> moonRays;
-
-        ofVboMesh sunRayVbo;
-        ofVboMesh moonRayVbo;
 
         ofEventListeners cbs;
 
     private:
         
         bool bNeedReset = true;
-
-        
     };
 }

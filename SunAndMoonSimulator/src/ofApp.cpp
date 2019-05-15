@@ -61,8 +61,8 @@ void ofApp::update(){
     moon.update(utcDate, lat, lng, tz);
     
     calcIntersection();
-    calcIntersectionWindowRay(window.moonRayVbo, window.moonRays, -moon.ray.getDirection(), moon.pos.y, ofColor(250, 250, 0, 100));
-    calcIntersectionWindowRay(window.sunRayVbo, window.sunRays, -sun.ray.getDirection(), sun.pos.y, ofColor(250, 0, 0, 100));
+    calcIntersectionWindowRay(window.moonRays, -moon.ray.getDirection(), moon.pos.y, ofColor(250, 250, 0, 100));
+    calcIntersectionWindowRay(window.sunRays, -sun.ray.getDirection(), sun.pos.y, ofColor(250, 0, 0, 100));
 }
 
 void ofApp::updateTime(){
@@ -112,20 +112,22 @@ void ofApp::calcIntersection(){
     }
 }
 
-void ofApp::calcIntersectionWindowRay( ofVboMesh & vbo, vector<Ray> & rays, vec3 dir, float planetHeight,
+void ofApp::calcIntersectionWindowRay( vector<Ray> & rays, vec3 dir, float planetHeight,
                                       ofColor col){
-    
-    float maxLen = 500;
-    unsigned int maxRef = 3;
     
     bool bPlanetIsHigh = (planetHeight > 0);
     if(bPlanetIsHigh){
+        float maxLen = 500;
+        unsigned int maxRef = 3;
+        const mat4 & mat = window.plane.getGlobalTransformMatrix();
+        ofMesh & m = window.plane.getMesh();
+
         for(int r=0; r<window.nRow; r++){
             for(int c=0; c<window.nCol; c++){                
                 int index = c + window.nCol * r;
                 if(index < rays.size()){
-                    ofMesh & m = window.plane.getMesh();
-                    vec3 origin = m.getVertex(index) + window.pos.get() + dir;
+                    vec4 origin4 = mat * vec4(m.getVertex(index),1);
+                    vec3 origin = vec3(origin4) + dir;
                     rays[index].setOrigin(origin);
                     rays[index].setDirection(dir);
                     rays[index].setMaxLength(maxLen);
