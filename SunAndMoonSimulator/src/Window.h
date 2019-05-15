@@ -74,12 +74,23 @@ namespace sunandmoon{
                 reset();
                 ofLogVerbose() << "reset" << endl;
             }
-            
+
+            ofSetColor(200);
             plane.drawWireframe();
             
-            ofSetColor(255, 0, 0);
-            sunRayVbo.draw();
-            moonRayVbo.draw();
+            //sunRayVbo.draw();
+            //moonRayVbo.draw();
+
+            ofSetColor(250, 0, 0);
+            for(auto & r : sunRays){
+                r.getTrack().draw();
+            }
+
+            ofSetColor(250, 250, 0);
+            for(auto & r : moonRays){
+                r.getTrack().draw();
+            }
+
         }
         
         void clear(){

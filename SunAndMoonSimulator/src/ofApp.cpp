@@ -62,7 +62,7 @@ void ofApp::update(){
     
     calcIntersection();
     calcIntersectionWindowRay(window.moonRayVbo, window.moonRays, -moon.ray.getDirection(), moon.pos.y, ofColor(250, 250, 0, 100));
-    calcIntersectionWindowRay(window.sunRayVbo, window.sunRays, -sun.ray.getDirection(), sun.pos.y, ofColor(250, 0, 0, 10, 0));
+    calcIntersectionWindowRay(window.sunRayVbo, window.sunRays, -sun.ray.getDirection(), sun.pos.y, ofColor(250, 0, 0, 100));
 }
 
 void ofApp::updateTime(){
@@ -115,69 +115,31 @@ void ofApp::calcIntersection(){
 void ofApp::calcIntersectionWindowRay( ofVboMesh & vbo, vector<Ray> & rays, vec3 dir, float planetHeight,
                                       ofColor col){
     
-    float refLen = 100;
-    
-    int nV = vbo.getVertices().size();
-    int nRay = window.nRow * window.nCol;
-    if(nV !=  nRay*4){
-        ofLogError() << "Something is wrong here";
-        ofLogError() << "vbo size = " << nV;
-        ofLogError() << "nCol = " << window.nCol;
-        ofLogError() << "nRow = " << window.nRow;
-        ofLogError() << "nRay = " << nRay;
-        return;
-    }
+    float maxLen = 500;
+    unsigned int maxRef = 3;
     
     bool bPlanetIsHigh = (planetHeight > 0);
-    if(!bPlanetIsHigh){
+    if(bPlanetIsHigh){
         for(int r=0; r<window.nRow; r++){
-            for(int c=0; c<window.nCol; c++){
+            for(int c=0; c<window.nCol; c++){                
                 int index = c + window.nCol * r;
-                int vboIndex = index * 4;
-                for(int i=0; i<4; i++){
-                    vbo.setVertex(vboIndex+i, vec3(0));
-                    vbo.setColor(vboIndex+i, ofColor(0,0,0,0));
+                if(index < rays.size()){
+                    ofMesh & m = window.plane.getMesh();
+                    vec3 origin = m.getVertex(index) + window.pos.get() + dir;
+                    rays[index].setOrigin(origin);
+                    rays[index].setDirection(dir);
+                    rays[index].setMaxLength(maxLen);
+                    rays[index].setMaxReflectionNum(maxRef);
+                    rays[index].intersectsPrimitiveMultiCast(room.box);
                 }
             }
         }
     }else{
-        ofMesh & mesh = window.plane.getMesh();
-        
         for(int r=0; r<window.nRow; r++){
             for(int c=0; c<window.nCol; c++){
                 int index = c + window.nCol * r;
-                const vec3 & v = mesh.getVertex(index);
-                Ray & ray = window.moonRays[index];
-                vec3 origin = window.pos.get() + v + dir;
-                ray.setOrigin(origin);
-                ray.setDirection(dir);
-                glm::vec3 bari;
-                glm::vec3 normal;
-                bool bHit = (ray.intersectsPrimitive(room.box, bari, normal));
-                int vboIndex = index * 4;
-                if(bHit){
-                    vec3 intersection = origin + dir * bari.z;
-                    vbo.setVertex(vboIndex+0, origin);
-                    vbo.setVertex(vboIndex+1, intersection);
-                    
-                    //reflection
-                    vec3 refDir = glm::reflect(dir, normal);
-                    vbo.setVertex(vboIndex+2, intersection);
-                    vbo.setVertex(vboIndex+3, intersection + refDir * refLen);
-      
-                    vbo.setColor(vboIndex+0, col);
-                    vbo.setColor(vboIndex+1, col);
-                    vbo.setColor(vboIndex+2, col);
-                    vbo.setColor(vboIndex+3, col);
-                }else{
-                    vbo.setVertex(vboIndex+0, origin);
-                    vbo.setVertex(vboIndex+1, origin + dir * 10);
-                    vbo.setVertex(vboIndex+2, origin);  // no reflection, ignore
-                    vbo.setVertex(vboIndex+3, origin);  // no reflection, ignore
-                    
-                    for(int i=0; i<4; i++){
-                        vbo.setColor(vboIndex+i, ofColor(0));
-                    }
+                if(index < rays.size()){
+                    rays[index].clearVbo();
                 }
             }
         }
