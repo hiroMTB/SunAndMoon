@@ -22,6 +22,8 @@ namespace sunandmoon{
         Sun(){
             color = ofColor(250, 0, 0);
             grp.setName("Sun");
+            
+            timeline.allocate(ofGetScreenWidth()-100-20, 32);
         }
         
         void update(const Poco::DateTime & utcDate, const float lat, const float lng, int tz){
