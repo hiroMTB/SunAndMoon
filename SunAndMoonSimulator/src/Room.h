@@ -11,7 +11,9 @@ namespace sunandmoon{
 
         public:
 
-        Room(){
+        Room(){}
+        
+        void setup(){
                         
             // 3D humanObj
             humanObj.loadModel("obj/human.obj");
@@ -24,6 +26,8 @@ namespace sunandmoon{
             cbs.push( orientation.newListener( [&](vec3 & v){ change(); }));
             
             roomVbo.setMode(OF_PRIMITIVE_LINES);
+            
+            change();
         }
 
         ~Room(){

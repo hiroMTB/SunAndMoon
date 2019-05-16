@@ -16,7 +16,12 @@ namespace sunandmoon{
 
     public:
         
-        Window(){
+        Window(){}
+        
+        void setup(ofNode & parent){
+            
+            plane.setParent(parent);
+            
             cbs.push( nCol.newListener([=](int &){ this->reset();} ) );
             cbs.push( nRow.newListener([=](int &){ this->reset();} ) );
             
@@ -24,6 +29,8 @@ namespace sunandmoon{
             cbs.push( height.newListener([=](int &){ this->resetPlane();} ) );
             cbs.push( pos.newListener([=](vec3 &){ this->resetPlane();} ) );
             cbs.push( orientation.newListener([=](vec3 & v){ this->resetPlane();} ) );
+            
+            reset();
         }
 
         ~Window(){

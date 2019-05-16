@@ -25,6 +25,9 @@ void ofApp::setup(){
     // reset
     cbs.push(btnClearTrj.newListener( [&](void){clearVbo(); }));
     cbs.push(btnResetTime.newListener( [&](void){ utcDate = Poco::LocalDateTime().utc(); }));
+    earth.setup();
+    room.setup();
+    window.setup(room.box);
     
     string settingPath = ofToDataPath("json/settings.json");
     gui.setup("settings", settingPath);

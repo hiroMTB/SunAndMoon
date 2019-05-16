@@ -14,7 +14,10 @@ namespace sunandmoon{
 
     public:
 
-        Earth(){
+        Earth(){}
+        
+        
+        void setup(){
             ofDisableArbTex();
             string p = ofToDataPath("img/Albedo.jpg", true);
             bool ok = ofLoadImage(tex, p); // "img/GDEM-10km-BW_tr.png");
@@ -25,6 +28,8 @@ namespace sunandmoon{
             sphere.set(1, 64);
             sphere.setScale(1);
             sphere.setPosition(vec3(0, 0, 0));
+            
+            city.setup();
         }
         
         ~Earth(){
