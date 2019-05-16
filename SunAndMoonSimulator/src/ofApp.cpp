@@ -18,13 +18,8 @@ void ofApp::setup(){
     ofSetCircleResolution(128);
     ofSetIcoSphereResolution(4);
     
-    // gui
-    cbs.push(btnExport.newListener( [&](void){ exportTrj(); }));
-    cbs.push(trjDrawMode.newListener([&](int & mode){changeTrjDrawMode(mode);}));
+    setupGui();
     
-    // reset
-    cbs.push(btnClearTrj.newListener( [&](void){clearVbo(); }));
-    cbs.push(btnResetTime.newListener( [&](void){ utcDate = Poco::LocalDateTime().utc(); }));
     earth.setup();
     room.setup();
     window.setup(room.box);
@@ -54,6 +49,20 @@ void ofApp::setupGui(){
     //cam.setFov(60);
     cam.setNearClip(100);
     cam.setFarClip(numeric_limits<float>::max()*0.001);
+void ofApp::addPrmListener(){
+    cbs.push(btnExport.newListener( [&](void){ exportTrj(); }));
+    cbs.push(trjDrawMode.newListener([&](int & mode){ changeTrjDrawMode(mode);}));
+    cbs.push(btnClearTrj.newListener( [&](void){ clearVbo(); }));
+    cbs.push(btnResetTime.newListener( [&](void){ utcDate = Poco::LocalDateTime().utc(); syncLocalToUtc(); updateTimeString();}));
+    cbs.push(utcDateSt.newListener( [&](string&){ setDateTimeByUtcString(); }));
+    cbs.push(utcTimeSt.newListener( [&](string&){ setDateTimeByUtcString(); }));
+    cbs.push(localDateSt.newListener( [&](string&){ setDateTimeByLocalString(); }));
+    cbs.push(localTimeSt.newListener( [&](string&){ setDateTimeByLocalString(); }));
+}
+
+void ofApp::removePrmListener(){
+    cbs.unsubscribeAll();
+}
 }
 
 void ofApp::update(){
