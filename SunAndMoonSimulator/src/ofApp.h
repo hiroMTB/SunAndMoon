@@ -58,14 +58,14 @@ public:
     Poco::DateTime utcDate;
     Poco::DateTime localDate;
 
-    Room room;
-    Earth earth;
     Sun sun;
     Moon moon;
+    Earth earth;
+    Room room;
+    Window window;
 
     ofEventListeners cbs;
 
-    Window window;
     
     #include "Exporter.h"
 };
