@@ -34,6 +34,14 @@ public:
     void keyPressed(int key);
     void changeTrjDrawMode(int & mode);
     
+    void addPrmListener();
+    void removePrmListener();    
+    void syncLocalToUtc();
+    void syncUtcToLocal();
+    void setDateTimeByUtcString();
+    void setDateTimeByLocalString();
+    void updateTimeString();
+    
     // app param
     AppParam appPrm;
     
@@ -66,6 +74,8 @@ public:
 
     ofEventListeners cbs;
 
+    static const string pocoDateFormat;;
+    static const string pocoTimeFormat;
     
     #include "Exporter.h"
 };

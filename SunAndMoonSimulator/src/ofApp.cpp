@@ -1,9 +1,13 @@
 #include "ofApp.h"
 
 #include "Poco/DateTimeFormatter.h"
+#include "Poco/DateTimeParser.h"
 #include "Poco/LocalDateTime.h"
 #include "Poco/Timespan.h"
 #include "Constants.h"
+
+const string ofApp::pocoDateFormat{"%Y-%m-%d"};
+const string ofApp::pocoTimeFormat{"%H:%M:%S"};
 
 void ofApp::setup(){
     
