@@ -32,7 +32,6 @@ namespace sunandmoon{
         City(){}
         
         void setup(){
-        
             ofFile file("json/worldcities.csv");
             if(file.exists()){
                 ofBuffer buffer(file);
@@ -106,7 +105,6 @@ namespace sunandmoon{
         }
         
         void setCityByCityName(string & city){
-            ofLogNotice() << "setCityByCityName";
             vector<CityData>::iterator itr = std::find_if(data.begin(),data.end(),[&](const CityData & c){ return (c.name == city);});
             if(itr != data.end()){
                 setCityId(itr->cityId);
