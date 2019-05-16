@@ -1,5 +1,5 @@
 ofxAssimpModelLoader
 ofxGui
 ofxPoco
-ofxRaycaster
-ofxSunCalc
+../addon_local/ofxRaycaster
+../addon_local/ofxSunCalc
