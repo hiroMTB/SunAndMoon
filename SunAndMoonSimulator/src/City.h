@@ -88,7 +88,6 @@ namespace sunandmoon{
         }
         
         void setCityId(int id){
-            ofLogNotice() << "setCityById";
             removePrmListener();
             
             if(nCity == 0){
@@ -104,7 +103,6 @@ namespace sunandmoon{
             lng = c.lng;
             
             addPrmListener();
-            ofLogNotice() << "Jump to to new city " << cityId << ", " << cityName;
         }
         
         void setCityByCityName(string & city){
