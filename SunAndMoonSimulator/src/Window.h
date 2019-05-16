@@ -17,8 +17,6 @@ namespace sunandmoon{
     public:
         
         Window(){
-            ofLogNotice() << "Window constructed";
-
             cbs.push( nCol.newListener([=](int &){ this->reset();} ) );
             cbs.push( nRow.newListener([=](int &){ this->reset();} ) );
             
@@ -29,7 +27,6 @@ namespace sunandmoon{
         }
 
         ~Window(){
-            ofLogNotice() << "Window destucted";
             clear();
         }
         
@@ -51,11 +48,6 @@ namespace sunandmoon{
             sunRays.resize(nRay);
             moonRays.resize(nRay);
             bNeedReset = false;
-            
-            ofLogNotice() << "Window object reset";
-            ofLogNotice() << "nCol = " << nCol;
-            ofLogNotice() << "nRow = " << nRow;
-            ofLogNotice() << "SunRays size = " << sunRays.size();
         }
         
         void draw(){

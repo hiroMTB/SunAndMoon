@@ -29,7 +29,9 @@ namespace sunandmoon{
         
     public:
         
-        City(){
+        City(){}
+        
+        void setup(){
         
             ofFile file("json/worldcities.csv");
             if(file.exists()){
@@ -59,7 +61,10 @@ namespace sunandmoon{
             cityVbo.setMode(OF_PRIMITIVE_LINES);
             
             cbs.push( cityId.newListener([&](int & i){setCityId(cityId);}));
-            cbs.push( cityName.newListener([&](string & s){ setCityByName(s);}));
+            cbs.push( cityName.newListener([&](string & s){ setCityByCityName(s);}));
+            cbs.push( countryName.newListener([&](string & s){ setCityByCountryName(s);}));
+            
+            ofLogNotice() << "Loaded : " << nCity << " city data";
         }
         
         void draw(){
@@ -75,22 +80,49 @@ namespace sunandmoon{
             setCityId(cityId-1);
         }
 
+        void disableParameterEvents(){
+            cityId.disableEvents();
+            cityName.disableEvents();
+            countryName.disableEvents();
+        }
+        
+        void enableParameterEvents(){
+            cityId.enableEvents();
+            cityName.enableEvents();
+            countryName.enableEvents();
+        }
+        
         void setCityId(int id){
+            ofLogNotice() << "setCityById";
+            //disableParameterEvents();
+            
             if(nCity == 0){
                 ofLogError() << "CityData is empty" << endl;
                 setError();
                 return;
             }
-            cityId = id % nCity;
+            cityId.setWithoutEventNotifications(id % nCity);
             CityData & c = data[cityId];
-            cityName = c.name;
-            countryName = c.country;
+            cityName.setWithoutEventNotifications(c.name);
+            countryName.setWithoutEventNotifications(c.country);
             lat = c.lat;
             lng = c.lng;
+            //enableParameterEvents();
+            ofLogNotice() << "Jump to to new city " << cityId << ", " << cityName;
         }
         
-        void setCityByName(string & name){
-            vector<CityData>::iterator itr = std::find_if(data.begin(),data.end(),[&](const CityData & c){ return (c.name == name);});
+        void setCityByCityName(string & city){
+            ofLogNotice() << "setCityByCityName";
+            vector<CityData>::iterator itr = std::find_if(data.begin(),data.end(),[&](const CityData & c){ return (c.name == city);});
+            if(itr != data.end()){
+                setCityId(itr->cityId);
+            }else{
+                setError();
+            }
+        }
+
+        void setCityByCountryName(string & country){
+            vector<CityData>::iterator itr = std::find_if(data.begin(),data.end(),[&](const CityData & c){ return (c.country == country);});
             if(itr != data.end()){
                 setCityId(itr->cityId);
             }else{

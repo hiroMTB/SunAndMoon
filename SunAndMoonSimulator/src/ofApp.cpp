@@ -41,6 +41,7 @@ void ofApp::setup(){
     gui.loadFromFile(settingPath);
     gui.minimizeAll();
     
+    earth.city.setup();
     room.change();
     window.plane.setParent(room.box);
     window.reset();
