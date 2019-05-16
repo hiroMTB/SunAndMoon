@@ -60,10 +60,7 @@ namespace sunandmoon{
             cityId.setMax( nCity );
             cityVbo.setMode(OF_PRIMITIVE_LINES);
             
-            cbs.push( cityId.newListener([&](int & i){setCityId(cityId);}));
-            cbs.push( cityName.newListener([&](string & s){ setCityByCityName(s);}));
-            cbs.push( countryName.newListener([&](string & s){ setCityByCountryName(s);}));
-            
+            addPrmListener();
             ofLogNotice() << "Loaded : " << nCity << " city data";
         }
         
@@ -80,34 +77,33 @@ namespace sunandmoon{
             setCityId(cityId-1);
         }
 
-        void disableParameterEvents(){
-            cityId.disableEvents();
-            cityName.disableEvents();
-            countryName.disableEvents();
+        void addPrmListener(){
+            cbs.push( cityId.newListener([&](int & i){setCityId(cityId);}));
+            cbs.push( cityName.newListener([&](string & s){ setCityByCityName(s);}));
+            cbs.push( countryName.newListener([&](string & s){ setCityByCountryName(s);}));
         }
         
-        void enableParameterEvents(){
-            cityId.enableEvents();
-            cityName.enableEvents();
-            countryName.enableEvents();
+        void removePrmListener(){
+            cbs.unsubscribeAll();
         }
         
         void setCityId(int id){
             ofLogNotice() << "setCityById";
-            //disableParameterEvents();
+            removePrmListener();
             
             if(nCity == 0){
                 ofLogError() << "CityData is empty" << endl;
                 setError();
                 return;
             }
-            cityId.setWithoutEventNotifications(id % nCity);
+            cityId = id % nCity;
             CityData & c = data[cityId];
-            cityName.setWithoutEventNotifications(c.name);
-            countryName.setWithoutEventNotifications(c.country);
+            cityName = c.name;
+            countryName = c.country;
             lat = c.lat;
             lng = c.lng;
-            //enableParameterEvents();
+            
+            addPrmListener();
             ofLogNotice() << "Jump to to new city " << cityId << ", " << cityName;
         }
         
@@ -131,9 +127,11 @@ namespace sunandmoon{
         }
 
         void setError(){
+            removePrmListener();
             cityName = "Can not find city name";
             countryName = "Can not find city name";
             cityId = -1;
+            addPrmListener();
         }
         
         ofParameter<bool> bDrawCity{"draw city", false};
