@@ -29,6 +29,8 @@ void ofApp::setup(){
     room.setup();
     window.setup(room.box);
     
+void ofApp::setupGui(){
+    
     string settingPath = ofToDataPath("json/settings.json");
     gui.setup("settings", settingPath);
     gui.add(appPrm.grp);
