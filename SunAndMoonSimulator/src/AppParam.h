@@ -13,6 +13,9 @@ namespace module{
         
         AppParam(){
             targetFps.addListener(this, &AppParam::targetFpsChanged);
+            
+            bStart.setSerializable(false);
+            fps.setSerializable(false);
         }
         
         ~AppParam(){
@@ -37,10 +40,10 @@ namespace module{
         }
         
         ofParameter<string> appVersion{"App Version", __DATE__};
-        ofParameter<bool> bStart{"Start", false, false};
+        ofParameter<bool> bStart{"Start", false};
         ofParameter<bool> bDebug{"Debug", true};
         ofParameter<int> targetFps{"Target FPS", 50, 0, 500};
-        ofParameter<int> fps{"FPS", -1, 0, 500, false};
+        ofParameter<int> fps{"FPS", -1, 0, 500};
         ofParameter<bool> bAntiAliasing{"Anti Aliasing", true};
         ofParameter<bool> bDepthTest{"Depth Test", false};
         ofParameter<bool> bAlphaBlending{"Alpha Blending", true};

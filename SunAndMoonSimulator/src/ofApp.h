@@ -41,6 +41,7 @@ public:
     void setDateTimeByUtcString();
     void setDateTimeByLocalString();
     void updateTimeString();
+    void calcShadow();
     
     // app param
     AppParam appPrm;
@@ -55,10 +56,17 @@ public:
     ofParameterGroup timeGrp{"Time", utcDateSt, utcTimeSt, localDateSt, localTimeSt, updateSpeed, btnResetTime};
 
     // Trajectory
+    ofParameter<bool> bDrawTrj{"draw trajectory", true};
     ofParameter<void> btnClearTrj{"Clear trajectory"};
     ofParameter<int> trjDrawMode{"draw mode", 1, 0, 3};
-    ofParameterGroup trjGrp{"Trajectory", trjDrawMode, btnClearTrj};
-    
+    ofParameterGroup trjGrp{"Trajectory", bDrawTrj, trjDrawMode, btnClearTrj};
+
+    // Shadow
+    ofParameter<float> stickLength{"Stick Len (cm)", 100, 0, 300};
+    ofParameter<float> shadowLength{"Shadow (cm)", 0, 0, 500};
+    ofParameter<float> shadowDirection{"Direction", 0, 0, 360};
+    ofParameterGroup shadowGrp{"Shadow", stickLength, shadowLength, shadowDirection};
+
     ofxPanel gui;
     ofEasyCam cam;
     ofxAssimpModelLoader earthObj;

@@ -55,9 +55,9 @@ namespace sunandmoon{
             ofRotateXDeg(90-city.lat);
             ofRotateYDeg(-city.lng);
 
-            ofDrawAxis(earthRadius);
-
             if(bDrawEarth){
+                ofDrawAxis(earthRadius);
+
                 // earth
                 ofEnableAlphaBlending();
                 ofSetColor(255);

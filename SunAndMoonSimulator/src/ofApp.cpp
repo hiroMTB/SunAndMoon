@@ -28,7 +28,14 @@ void ofApp::setup(){
     room.setup();
     window.setup(room.box);
     
+    //cam.setFov(60);
+    cam.setNearClip(100);
+    cam.setFarClip(numeric_limits<float>::max()*0.001);
+}
+
 void ofApp::setupGui(){
+    
+    addPrmListener();
     
     string settingPath = ofToDataPath("json/settings.json");
     gui.setup("settings", settingPath);
@@ -41,18 +48,12 @@ void ofApp::setupGui(){
     gui.add(room.grp);
     gui.add(window.grp);
     gui.add(trjGrp);
+    gui.add(shadowGrp);
     gui.add(expGrp);
     gui.loadFromFile(settingPath);
     gui.minimizeAll();
-    
-    earth.city.setup();
-    room.change();
-    window.plane.setParent(room.box);
-    window.reset();
-    
-    //cam.setFov(60);
-    cam.setNearClip(100);
-    cam.setFarClip(numeric_limits<float>::max()*0.001);
+}
+
 void ofApp::addPrmListener(){
     cbs.push(btnExport.newListener( [&](void){ exportTrj(); }));
     cbs.push(trjDrawMode.newListener([&](int & mode){ changeTrjDrawMode(mode);}));
@@ -67,41 +68,95 @@ void ofApp::addPrmListener(){
 void ofApp::removePrmListener(){
     cbs.unsubscribeAll();
 }
+
+void ofApp::setDateTimeByUtcString(){
+    
+    const string fmt = pocoDateFormat + " " + pocoTimeFormat;
+    const string utcSt = utcDateSt.get() + "" + utcTimeSt.get();
+    int tz = 0;
+    bool ok = Poco::DateTimeParser::tryParse(fmt, utcSt, utcDate, tz);
+    if(ok){
+        syncLocalToUtc();
+        updateTimeString();
+    }
+}
+
+void ofApp::setDateTimeByLocalString(){
+    
+    const string fmt = pocoDateFormat + " " + pocoTimeFormat;
+    const string localSt = localDateSt.get() + "" + localTimeSt.get();
+    int tz = 0;
+    bool ok = Poco::DateTimeParser::tryParse(fmt, localSt, localDate, tz);
+    if(ok){
+        syncUtcToLocal();
+        updateTimeString();
+    }
 }
 
 void ofApp::update(){
     
-    updateTime();
-    
     float lat = earth.city.lat;
     float lng = earth.city.lng;
     int tz = earth.city.timezone = round(lng / 180.0 * 12.0);
+    
+    updateTime();
+    
     sun.update(utcDate, lat, lng, tz);
     moon.update(utcDate, lat, lng, tz);
     
     calcIntersection();
     calcIntersectionWindowRay(window.moonRays, -moon.ray.getDirection(), moon.pos.y, ofColor(250, 250, 0, 100));
     calcIntersectionWindowRay(window.sunRays, -sun.ray.getDirection(), sun.pos.y, ofColor(250, 0, 0, 100));
+    
+    calcShadow();
 }
 
 void ofApp::updateTime(){
     
+    // update utc
+    if(appPrm.bStart) {
+        Poco::Timespan speed(0, 0, updateSpeed, 0, 0);
+        utcDate += speed;
+        syncLocalToUtc();
+        updateTimeString();
+    }
+}
+
+void ofApp::syncLocalToUtc(){
     int tz = earth.city.timezone;
     Poco::Timespan offset(0,tz,0,0,0);
-    
-    Poco::Timespan speed(0, 0, updateSpeed, 0, 0);
-    if(appPrm.bStart) {
-        utcDate += speed;
-    }
     localDate = utcDate + offset;
+}
+
+void ofApp::syncUtcToLocal(){
+    int tz = earth.city.timezone;
+    Poco::Timespan offset(0,tz,0,0,0);
+    utcDate = localDate - offset;
+}
+
+void ofApp::updateTimeString(){
+    
+    removePrmListener();
     
     // update string display
-    utcTimeSt = Poco::DateTimeFormatter::format(utcDate, "%H:%M:%S");
-    localTimeSt = Poco::DateTimeFormatter::format(localDate, "%H:%M:%S");
+    utcDateSt = Poco::DateTimeFormatter::format(utcDate, pocoDateFormat);
+    utcTimeSt = Poco::DateTimeFormatter::format(utcDate, pocoTimeFormat);
     
-    utcDateSt = Poco::DateTimeFormatter::format(utcDate, "%Y-%m-%d");
-    localDateSt = Poco::DateTimeFormatter::format(localDate, "%Y-%m-%d");
+    localDateSt = Poco::DateTimeFormatter::format(localDate, pocoDateFormat);
+    localTimeSt = Poco::DateTimeFormatter::format(localDate, pocoTimeFormat);
     
+    addPrmListener();
+}
+
+void ofApp::calcShadow(){
+    
+    if(sun.altitude>0){
+        shadowDirection = fmodf(sun.azimuth + 180.0f, 360.0);
+        shadowLength = stickLength * tan( ofDegToRad(90.0 - sun.altitude));
+    }else{
+        shadowDirection = 0;
+        shadowLength = 0;
+    }
 }
 
 void ofApp::calcIntersection(){
@@ -137,7 +192,7 @@ void ofApp::calcIntersectionWindowRay( vector<Ray> & rays, vec3 dir, float plane
     bool bPlanetIsHigh = (planetHeight > 0);
     if(bPlanetIsHigh){
         float maxLen = 500;
-        unsigned int maxRef = 3;
+        unsigned int maxRef = 1;
         const mat4 & mat = window.plane.getGlobalTransformMatrix();
         ofMesh & m = window.plane.getMesh();
 
@@ -220,7 +275,20 @@ void ofApp::draw3dDisplay(){
         sun.draw();
         moon.draw();
         room.draw();
-        window.draw();
+        window.drawWindow();
+
+        if(bDrawTrj){
+            if(sun.bDraw) window.drawSunRays();
+            if(moon.bDraw) window.drawMoonRays();
+        }
+        
+        // shadow
+        ofPushMatrix();
+        ofTranslate(origin);
+        ofRotateYDeg(-shadowDirection);
+        ofSetColor(0,255,0);
+        ofDrawLine(vec3(0), vec3(0, 0, shadowLength));
+        ofPopMatrix();
         
         cam.end();
     }
@@ -365,6 +433,8 @@ void ofApp::keyPressed(int key){
                 earth.city.goToNextCity();
             }else{
                 utcDate += Poco::Timespan(1,0,0,0,0);
+                syncLocalToUtc();
+                updateTimeString();
             }
             break;
             
@@ -373,15 +443,21 @@ void ofApp::keyPressed(int key){
                 earth.city.goToPrevCity();
             }else{
                 utcDate -= Poco::Timespan(1,0,0,0,0);
+                syncLocalToUtc();
+                updateTimeString();
             }
             break;
             
         case OF_KEY_UP:
             utcDate += Poco::Timespan(30,0,0,0,0);
+            syncLocalToUtc();
+            updateTimeString();
             break;
             
         case OF_KEY_DOWN:
             utcDate -= Poco::Timespan(30,0,0,0,0);
+            syncLocalToUtc();
+            updateTimeString();
             break;
             
         case 'c':

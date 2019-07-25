@@ -57,20 +57,24 @@ namespace sunandmoon{
             bNeedReset = false;
         }
         
-        void draw(){
+        void drawWindow(){
             if(bDraw){
                 ofSetColor(200);
                 plane.drawWireframe();
-
-                ofSetColor(250, 0, 0);
-                for(auto & r : sunRays){
-                    r.getTrack().draw();
-                }
-
-                ofSetColor(250, 250, 0);
-                for(auto & r : moonRays){
-                    r.getTrack().draw();
-                }
+            }
+        }
+        
+        void drawSunRays(){
+            ofSetColor(250, 0, 0);
+            for(auto & r : sunRays){
+                r.getTrack().draw();
+            }
+        }
+        
+        void drawMoonRays(){
+            ofSetColor(250, 250, 0);
+            for(auto & r : moonRays){
+                r.getTrack().draw();
             }
         }
         
