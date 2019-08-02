@@ -5,15 +5,16 @@
 
 #pragma once
 
+using glm::vec3;
+
 namespace sunandmoon{
     
     class Planet{
     public:
         
         Planet(){
-            vec3 direction = glm::vec3(0,1,0);
-            vec3 origin = glm::vec3(0, 0, 0);
-            ray.setup(origin, direction);
+            resetRay();
+            cbs.push( origin.newListener( [&](vec3 & v){ resetRay();} ) );
         }
         
         ~Planet(){
@@ -67,7 +68,12 @@ namespace sunandmoon{
             trj.clear();
         }
         
+        void resetRay(){
+            ray.setup(vec3(0,1,0), origin);
+        }
+        
         ofParameter<bool> bDraw{"draw", true};
+        ofParameter<vec3> origin{"origin", vec3(0), vec3(-1000), vec3(1000)};
         ofParameter<float> radius{"radius", 1000, 10, 5000};
         ofParameter<float> brightness{"brightness", 0, 0, 1};
         ofParameter<float> altitude{"altitude", 0, -180, 180};
@@ -77,7 +83,7 @@ namespace sunandmoon{
         ofParameter<string> noon{"noon", "n.a."};
         ofParameter<string> set{"set", "n.a."};
         ofParameter<string> dusk{"dusk", "n.a."};
-        ofParameterGroup grp{"Planet", bDraw, radius, brightness, azimuth, altitude, dawn, rise, noon, set, dusk};
+        ofParameterGroup grp{"Planet", bDraw, origin, radius, brightness, azimuth, altitude, dawn, rise, noon, set, dusk};
         
         vec3 pos;   // 3d
         vec3 dir;   // 2d
@@ -88,5 +94,6 @@ namespace sunandmoon{
         ofFbo timeline;
         
         ofColor color{255};
+        ofEventListeners cbs;
     };
 }

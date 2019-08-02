@@ -3,10 +3,12 @@
 
 int main( ){
 
-    ofSetDataPathRoot("../Resources/data/");
+//    ofSetDataPathRoot("../Resources/data/");
     
-    
-	ofSetupOpenGL(1400,600,OF_WINDOW);
+    ofGLFWWindowSettings settings;
+    settings.setGLVersion(4,1);
+    settings.setSize(1920,1080);
+    ofCreateWindow(settings);
 	ofRunApp(new ofApp());
 
 }

@@ -10,7 +10,9 @@
 #include "City.h"
 #include "Room.h"
 #include "Window.h"
+#include "Human.h"
 #include "AppParam.h"
+#include "ofxShadowMap.h"
 
 using namespace glm;
 using namespace module;
@@ -23,8 +25,8 @@ public:
     void setupGui();
     void update();
     void updateTime();
-    void calcIntersection();
-    void calcIntersectionWindowRay( vector<Ray> & rays, vec3 dir, float planetHeight, ofColor col);
+    void calcIntersectionWall();
+    void calcIntersectionWindow( vector<Ray> & rays, vec3 dir, float planetHeight, ofColor col);
     void draw();
     void draw3dDisplay();
     void drawHeightDisplay();
@@ -42,6 +44,8 @@ public:
     void setDateTimeByLocalString();
     void updateTimeString();
     void calcShadow();
+    
+    void messageReceived(ofMessage & message);
     
     // app param
     AppParam appPrm;
@@ -61,12 +65,25 @@ public:
     ofParameter<int> trjDrawMode{"draw mode", 1, 0, 3};
     ofParameterGroup trjGrp{"Trajectory", bDrawTrj, trjDrawMode, btnClearTrj};
 
-    // Shadow
+    // Shadow (physical calculation)
     ofParameter<float> stickLength{"Stick Len (cm)", 100, 0, 300};
     ofParameter<float> shadowLength{"Shadow (cm)", 0, 0, 500};
     ofParameter<float> shadowDirection{"Direction", 0, 0, 360};
     ofParameterGroup shadowGrp{"Shadow", stickLength, shadowLength, shadowDirection};
 
+    // ShadowMap (rendering)
+    ofxShadowMap shadowMap;
+    ofLight light;
+    ofMaterial groundMaterial;
+    ofPlanePrimitive ground{5000,5000,2,2};
+    ofEventListener shadowMapListener;
+    ofBoxPrimitive box;
+    
+    ofParameter<float> fustrumSize{"fustrum size", 100, 10, 10000};
+    ofParameter<float> farClip{"far clip", 1000, 10, 10000};
+    ofParameter<bool> enableShadows{"enable shaodws", true};
+    ofParameterGroup shadowMapGrp{"ShadowMap",fustrumSize, farClip, enableShadows, shadowMap.parameters};
+    
     ofxPanel gui;
     ofEasyCam cam;
     ofxAssimpModelLoader earthObj;
@@ -79,9 +96,12 @@ public:
     Earth earth;
     Room room;
     Window window;
+    Human human;
 
     ofEventListeners cbs;
 
+    
+    
     static const string pocoDateFormat;;
     static const string pocoTimeFormat;
     

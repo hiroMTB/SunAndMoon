@@ -43,7 +43,7 @@ namespace sunandmoon{
             ofTranslate(0, -earthRadius-200);
 
             // PIN
-            {
+            if(bDrawEarth){
                 ofSetColor(255, 0, 150);
                 ofDrawLine(0,earthRadius+500, 0, earthRadius+700);
                 ofFill();

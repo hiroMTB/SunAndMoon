@@ -31,6 +31,21 @@ void ofApp::setup(){
     //cam.setFov(60);
     cam.setNearClip(100);
     cam.setFarClip(numeric_limits<float>::max()*0.001);
+    
+    //
+    shadowMap.setup(4096*2);
+    shadowMap.setupMaterialWithShadowMap(groundMaterial);
+    ground.setOrientation(glm::angleAxis(ofDegToRad(-90.f), glm::vec3{1.f,0.f,0.f}));
+    box.set(100, 100, 100);
+    box.setPosition(0, 50, 0);
+    
+    light.enable();
+    shadowMapListener = enableShadows.newListener([this](bool & on){
+        if(!on){
+            shadowMap.begin(light, fustrumSize, 1, farClip);
+            shadowMap.end();
+        }
+    });
 }
 
 void ofApp::setupGui(){
@@ -47,8 +62,10 @@ void ofApp::setupGui(){
     gui.add(moon.grp);
     gui.add(room.grp);
     gui.add(window.grp);
+    gui.add(human.grp);
     gui.add(trjGrp);
     gui.add(shadowGrp);
+    gui.add(shadowMapGrp);
     gui.add(expGrp);
     gui.loadFromFile(settingPath);
     gui.minimizeAll();
@@ -104,9 +121,14 @@ void ofApp::update(){
     sun.update(utcDate, lat, lng, tz);
     moon.update(utcDate, lat, lng, tz);
     
-    calcIntersection();
-    calcIntersectionWindowRay(window.moonRays, -moon.ray.getDirection(), moon.pos.y, ofColor(250, 250, 0, 100));
-    calcIntersectionWindowRay(window.sunRays, -sun.ray.getDirection(), sun.pos.y, ofColor(250, 0, 0, 100));
+    // update ray origin based on human's head position
+    vec3 origin = human.pos + vec3(0,165,0);
+    sun.ray.setOrigin(origin);
+    moon.ray.setOrigin(origin);
+    
+    calcIntersectionWall();
+    calcIntersectionWindow(window.moonRays, -moon.ray.getDirection(), moon.pos.y, ofColor(250, 250, 0, 100));
+    calcIntersectionWindow(window.sunRays, -sun.ray.getDirection(), sun.pos.y, ofColor(250, 0, 0, 100));
     
     calcShadow();
 }
@@ -159,84 +181,47 @@ void ofApp::calcShadow(){
     }
 }
 
-void ofApp::calcIntersection(){
-    
-    {
-        // Sun and Room
-        glm::vec3 bari;
-        glm::vec3 normal;
-        ofxraycaster::Ray & ray = sun.ray;
-        bool bHit = (ray.intersectsPrimitive(room.box, bari, normal));
-        if(bHit){
-            vec3 intersection = ray.getOrigin() + ray.getDirection() * bari.z;
-            room.addSunTrace(intersection);
-        }
-    }
-    
-    {
-        // Moon and Room
-        ofxraycaster::Ray & ray = moon.ray;
-        glm::vec3 bari;
-        glm::vec3 normal;
-        bool bHit = (ray.intersectsPrimitive(room.box, bari, normal));
-        if(bHit){
-            vec3 intersection = ray.getOrigin() + ray.getDirection() * bari.z;
-            room.addMoonTrace(intersection);
-        }
-    }
-}
-
-void ofApp::calcIntersectionWindowRay( vector<Ray> & rays, vec3 dir, float planetHeight,
-                                      ofColor col){
-    
-    bool bPlanetIsHigh = (planetHeight > 0);
-    if(bPlanetIsHigh){
-        float maxLen = 500;
-        unsigned int maxRef = 1;
-        const mat4 & mat = window.plane.getGlobalTransformMatrix();
-        ofMesh & m = window.plane.getMesh();
-
-        for(int r=0; r<window.nRow; r++){
-            for(int c=0; c<window.nCol; c++){                
-                int index = c + window.nCol * r;
-                if(index < rays.size()){
-                    vec4 origin4 = mat * vec4(m.getVertex(index),1);
-                    vec3 origin = vec3(origin4) + dir;
-                    rays[index].setOrigin(origin);
-                    rays[index].setDirection(dir);
-                    rays[index].setMaxLength(maxLen);
-                    rays[index].setMaxReflectionNum(maxRef);
-                    rays[index].intersectsPrimitiveMultiCast(room.box);
-                }
-            }
-        }
-    }else{
-        for(int r=0; r<window.nRow; r++){
-            for(int c=0; c<window.nCol; c++){
-                int index = c + window.nCol * r;
-                if(index < rays.size()){
-                    rays[index].clearVbo();
-                }
-            }
-        }
-    }
-}
-
 void ofApp::draw(){
     appPrm.set();
     earth.bDrawSky ? drawSky() : ofBackground(0,0,50);
     
     // 3d
+    ofEnableLighting();
     draw3dDisplay();
     
     // 2d
     ofDisableDepthTest();
     drawBar();
     drawHeightDisplay();
+    
     gui.draw();
+
+//    shadowMap debug
+//    ofSetColor(255);
+//    shadowMap.getDepthTexture().draw(ofGetWidth()-256-10, 0, 256, 256);
 }
 
 void ofApp::draw3dDisplay(){
+    
+    {
+        ofEnableDepthTest();
+        ofEnableLighting();
+        float longitude = -sun.azimuth;
+        float latitude = -sun.altitude;
+        float dist = sun.radius;
+        
+        light.orbitDeg(longitude, latitude, dist, {0,0,0});
+        
+        ground.setPosition( vec3(0) );
+        shadowMap.begin(light, fustrumSize, 1, farClip);
+        ofPushMatrix();
+        room.draw();
+        human.draw(room.box, cam);
+        ofPopMatrix();
+        shadowMap.end();
+        
+        shadowMap.updateMaterial(groundMaterial);
+    }
     
     const float rad = 1000;
     
@@ -244,13 +229,11 @@ void ofApp::draw3dDisplay(){
         cam.begin();
         earth.draw();
         
-        vec3 origin = sun.ray.getOrigin();
-        
         ofDrawAxis(10);
         
         if(room.bDrawCompass){
+            ofDisableLighting();
             ofPushMatrix();
-            ofTranslate(origin);
             
             {
                 ofPushMatrix();
@@ -270,13 +253,20 @@ void ofApp::draw3dDisplay(){
             ofDrawBitmapString("W", west*rad);
             
             ofPopMatrix();
+            ofEnableLighting();
         }
         
         sun.draw();
         moon.draw();
         room.draw();
         window.drawWindow();
-
+        human.draw(room.box, cam);
+        
+//        groundMaterial.begin();
+//        ground.draw();
+//        groundMaterial.end();
+        //light.draw();
+        
         if(bDrawTrj){
             if(sun.bDraw) window.drawSunRays();
             if(moon.bDraw) window.drawMoonRays();
@@ -284,7 +274,7 @@ void ofApp::draw3dDisplay(){
         
         // shadow
         ofPushMatrix();
-        ofTranslate(origin);
+        //ofTranslate(origin);
         ofRotateYDeg(-shadowDirection);
         ofSetColor(0,255,0);
         ofDrawLine(vec3(0), vec3(0, 0, shadowLength));
@@ -420,61 +410,13 @@ void ofApp::changeTrjDrawMode(int & i){
     room.moonWallPath.setMode(mode);
 }
 
-void ofApp::keyPressed(int key){
-    
-    switch(key){
-            
-        case ' ':
-            appPrm.bStart = !appPrm.bStart;
-            break;
-            
-        case OF_KEY_RIGHT:
-            if(ofGetKeyPressed(OF_KEY_SHIFT)){
-                earth.city.goToNextCity();
-            }else{
-                utcDate += Poco::Timespan(1,0,0,0,0);
-                syncLocalToUtc();
-                updateTimeString();
-            }
-            break;
-            
-        case OF_KEY_LEFT:
-            if(ofGetKeyPressed(OF_KEY_SHIFT)){
-                earth.city.goToPrevCity();
-            }else{
-                utcDate -= Poco::Timespan(1,0,0,0,0);
-                syncLocalToUtc();
-                updateTimeString();
-            }
-            break;
-            
-        case OF_KEY_UP:
-            utcDate += Poco::Timespan(30,0,0,0,0);
-            syncLocalToUtc();
-            updateTimeString();
-            break;
-            
-        case OF_KEY_DOWN:
-            utcDate -= Poco::Timespan(30,0,0,0,0);
-            syncLocalToUtc();
-            updateTimeString();
-            break;
-            
-        case 'c':
-            clearVbo();
-            break;
-            
-        case 'r':
-            room.bDraw = !room.bDraw;
-            break;
-            
-        case 'e':
-            earth.bDrawEarth = !earth.bDrawEarth;
-            break;
-            
-        case 'C':
-            earth.city.bDrawCity = !earth.city.bDrawCity;
-            break;
-            
+void ofApp::messageReceived(ofMessage & message){
+
+    if(message.message == "lockCamera"){
+        cam.disableMouseInput();
     }
+    else if(message.message == "unlockCamera"){
+        cam.enableMouseInput();
+    }    
 }
+

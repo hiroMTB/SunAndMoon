@@ -1,7 +1,6 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxAssimpModelLoader.h"
 
 using namespace glm;
 
@@ -14,11 +13,7 @@ namespace sunandmoon{
         Room(){}
         
         void setup(){
-                        
-            // 3D humanObj
-            humanObj.loadModel("obj/human.obj");
-            humanObj.setScale(0.2, 0.2, 0.2);
-            
+
             // listener
             cbs.push( width.newListener( [&](float & f){ change(); }));
             cbs.push( height.newListener([&](float & f){ change(); }));
@@ -42,8 +37,9 @@ namespace sunandmoon{
         void change(){
 
             // box
+            float offsetY = height/2.0;
             box.set(width, height, depth, 1, 1, 1);
-            box.setPosition(0, 0, 0);
+            box.setPosition(0, offsetY, 0);
             box.setOrientation(orientation);
             
             // construct room with lines since ofBox, ofPlane shows diagonal line
@@ -51,7 +47,7 @@ namespace sunandmoon{
                 roomVbo.clear();
 
                 int x = width/2;
-                int y = height/2;
+                int y = height;
                 int z = depth/2;
 
                 {
@@ -68,14 +64,14 @@ namespace sunandmoon{
                 
                 {
                     //floor
-                    roomVbo.addVertex(vec3( -x, -y, z));
-                    roomVbo.addVertex(vec3( x,  -y, z));
-                    roomVbo.addVertex(vec3( x,  -y, z));
-                    roomVbo.addVertex(vec3( x,  -y, -z));
-                    roomVbo.addVertex(vec3( x,  -y, -z));
-                    roomVbo.addVertex(vec3( -x, -y, -z));
-                    roomVbo.addVertex(vec3( -x, -y, -z));
-                    roomVbo.addVertex(vec3( -x, -y, z));
+                    roomVbo.addVertex(vec3( -x, 0, z));
+                    roomVbo.addVertex(vec3( x,  0, z));
+                    roomVbo.addVertex(vec3( x,  0, z));
+                    roomVbo.addVertex(vec3( x,  0, -z));
+                    roomVbo.addVertex(vec3( x,  0, -z));
+                    roomVbo.addVertex(vec3( -x, 0, -z));
+                    roomVbo.addVertex(vec3( -x, 0, -z));
+                    roomVbo.addVertex(vec3( -x, 0, z));
                 }
                 
                 {
@@ -83,10 +79,10 @@ namespace sunandmoon{
                     roomVbo.addVertex(vec3( -x, y, z));
                     roomVbo.addVertex(vec3( x, y, z));
                     roomVbo.addVertex(vec3( x, y, z));
-                    roomVbo.addVertex(vec3( x, -y, z));
-                    roomVbo.addVertex(vec3( x, -y, z));
-                    roomVbo.addVertex(vec3( -x, -y, z));
-                    roomVbo.addVertex(vec3( -x, -y, z));
+                    roomVbo.addVertex(vec3( x, 0, z));
+                    roomVbo.addVertex(vec3( x, 0, z));
+                    roomVbo.addVertex(vec3( -x, 0, z));
+                    roomVbo.addVertex(vec3( -x, 0, z));
                     roomVbo.addVertex(vec3( -x, y, z));
                 }
 
@@ -95,10 +91,10 @@ namespace sunandmoon{
                     roomVbo.addVertex(vec3( -x, y, -z));
                     roomVbo.addVertex(vec3( x, y, -z));
                     roomVbo.addVertex(vec3( x, y, -z));
-                    roomVbo.addVertex(vec3( x, -y, -z));
-                    roomVbo.addVertex(vec3( x, -y, -z));
-                    roomVbo.addVertex(vec3( -x, -y, -z));
-                    roomVbo.addVertex(vec3( -x, -y, -z));
+                    roomVbo.addVertex(vec3( x, 0, -z));
+                    roomVbo.addVertex(vec3( x, 0, -z));
+                    roomVbo.addVertex(vec3( -x, 0, -z));
+                    roomVbo.addVertex(vec3( -x, 0, -z));
                     roomVbo.addVertex(vec3( -x, y, -z));
                 }
                 
@@ -112,23 +108,18 @@ namespace sunandmoon{
                     // column line
                     for(int i=0; i<nGridW; i++){
                         int dx = i * gridW;
-                        roomVbo.addVertex(vec3(-x+dx, -y, z));
-                        roomVbo.addVertex(vec3(-x+dx, -y, -z));
+                        roomVbo.addVertex(vec3(-x+dx, 0, z));
+                        roomVbo.addVertex(vec3(-x+dx, 0, -z));
                     }
                     
                     // row line
                     for(int i=0; i<nGridD; i++){
                         int dz = i * gridD;
-                        roomVbo.addVertex(vec3(-x, -y,-z+dz));
-                        roomVbo.addVertex(vec3(x, -y, -z+dz));
+                        roomVbo.addVertex(vec3(-x, 0,-z+dz));
+                        roomVbo.addVertex(vec3(x, 0, -z+dz));
                     }
                 }
             }
-            
-            // human
-            humanObj.setPosition(0, -height/2, 0);
-            humanObj.setRotation(0, 180, 1, 0, 0);
-
         }
 
         void addSunTrace(const vec3 & v){
@@ -144,12 +135,13 @@ namespace sunandmoon{
         }
 
         vec3 ceonvertToRoomCoordinate(const vec3 & v){
-            //mat4 m = box.getGlobalTransformMatrix();
-            mat4 m = box.getLocalTransformMatrix();
+            mat4 m = box.getGlobalTransformMatrix();
+            //mat4 m = box.getLocalTransformMatrix();
             mat4 inv = glm::inverse(m);
             vec4 v4 = vec4(v, 1);
             vec4 r4 = inv * v4;
-            return vec3(r4.x, r4.y, r4.z);
+            float offsetY = box.getPosition().y;
+            return vec3(r4.x, r4.y + offsetY, r4.z);
         }
         
         void draw(){
@@ -181,18 +173,10 @@ namespace sunandmoon{
                     ofPopMatrix();
                 }
                 
-                ofSetColor(150);
-                box.drawWireframe();
+                //ofSetColor(150);
+                //box.drawWireframe();
             }
             
-            // human
-            ofPushMatrix();
-            ofRotateXDeg(orientation.get().x);
-            ofRotateZDeg(orientation.get().z);
-            ofRotateYDeg(orientation.get().y);
-            ofSetColor(150);
-            humanObj.drawWireframe();
-            ofPopMatrix();
 
             ofPopMatrix();
         }
@@ -213,7 +197,7 @@ namespace sunandmoon{
 
         vec3 sunOnTheWall;
         vec3 moonOnTheWall;
-        ofxAssimpModelLoader humanObj;
+
 
         ofEventListeners cbs;
     };
