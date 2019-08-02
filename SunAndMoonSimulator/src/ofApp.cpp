@@ -203,7 +203,7 @@ void ofApp::draw(){
 
 void ofApp::draw3dDisplay(){
     
-    {
+    if(enableShadows){
         ofEnableDepthTest();
         ofEnableLighting();
         float longitude = -sun.azimuth;
@@ -256,17 +256,19 @@ void ofApp::draw3dDisplay(){
             ofEnableLighting();
         }
         
+        if(enableShadows){
+            groundMaterial.begin();
+            ground.draw();
+            groundMaterial.end();
+        }
+        
         sun.draw();
         moon.draw();
         room.draw();
         window.drawWindow();
-        human.draw(room.box, cam);
-        
-//        groundMaterial.begin();
-//        ground.draw();
-//        groundMaterial.end();
-        //light.draw();
-        
+        human.draw(room.box, cam);        
+        human.drawGizmo(room.box, cam);
+                
         if(bDrawTrj){
             if(sun.bDraw) window.drawSunRays();
             if(moon.bDraw) window.drawMoonRays();
@@ -274,7 +276,6 @@ void ofApp::draw3dDisplay(){
         
         // shadow
         ofPushMatrix();
-        //ofTranslate(origin);
         ofRotateYDeg(-shadowDirection);
         ofSetColor(0,255,0);
         ofDrawLine(vec3(0), vec3(0, 0, shadowLength));

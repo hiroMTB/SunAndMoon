@@ -51,17 +51,22 @@ namespace sunandmoon{
             ofRotateYDeg(orientatino.y);
             ofSetColor(150);
             humanObj.drawWireframe();
-            
-            if(1){
-                // gizmo always need to be drawn in order to update position.
-                ofDisableLighting();
-                ofFill();
-                gizmo.draw(cam);
-            }
-            
             ofPopMatrix();
         }
 
+        void drawGizmo(ofBoxPrimitive & box, const ofCamera & cam){
+            
+            ofPushMatrix();
+            ofTranslate(box.getPosition());
+            ofTranslate(0, -box.getHeight()/2, 0);
+
+            // gizmo always need to be drawn in order to update position.
+            ofDisableLighting();
+            ofFill();
+            gizmo.draw(cam);
+            ofPopMatrix();
+        }
+        
         void onTranslateChange(ofVec3f & p){
             humanObj.setPosition(p.x, p.y, p.z);
             pos = p;
