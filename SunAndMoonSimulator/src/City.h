@@ -124,8 +124,8 @@ namespace sunandmoon{
 
         void setError(){
             removePrmListener();
-            cityName = "Can not find city name";
-            countryName = "Can not find city name";
+            cityName = "";
+            countryName = "";
             cityId = -1;
             addPrmListener();
         }
